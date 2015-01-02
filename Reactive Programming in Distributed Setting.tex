@@ -33,6 +33,7 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{url}
+\usepackage{color}
 %\usepackage{fixltx2e}
 
 \graphicspath{ {images/} }
@@ -97,7 +98,7 @@ Distributed Systems, Observer Pattern, Event-Driven Programming, Reactive Progra
 Technology has become a part of our everyday life due to the many improvements it brings to our lives. Applications range from large client-server architectures backing up the work of large corporations, through mobile devices used ubiquitously for tracking and sharing sport and social activities, to pervasive computing implementing monitoring and controlling of the ambient. The numerous usages require more complicated networking and architectures to support them. This is where distributed applications come in handy with their resource sharing capabilities, good cost/performance ratio and fault tolerance.
 Despite their many advantages, distributed systems also pose some challenges to developers, the most important of which being the correct synchronization between distributed nodes. Exchanging messages from one host to another and upholding different consistency guarantees in particular become much more difficult with the introduction of distribution. Moreover, the task of handling the communication efficiently in a decentralized and potentially dynamic network calls for a revision of the existing paradigms. 
 
-Various solutions have been proposed in order to establish a good mechanism that deals with the communication reliably. We will discuss and compare some of them in terms of their ease of use and benefits. The focus will be on the possible use of reactive applications, which have already been shown to efficiently address the requirements of passing messages between layers in general software applications.\cite{bridging} They provide the expected responsiveness and fault-tolerance, being able to handle a lot of content and scale without significant difficulties. In the current paper we will examine their possible use in distributed applications and the implications of this approach.
+Various solutions have been proposed in order to establish a good mechanism that deals with the communication reliably. We will discuss and compare some of them in terms of their ease of use and benefits. The focus will be on the possible use of reactive applications, which have already been shown to efficiently address the requirements of passing messages between layers in general software applications \cite{bridging}. They provide the expected responsiveness and fault-tolerance, being able to handle a lot of content and scale without significant difficulties. In the current paper we will examine their possible use in distributed applications and the implications of this approach.
 
 This paper makes the following contributions:
 
@@ -112,26 +113,24 @@ The rest of the paper is structured as follows: Section 2 summarizes the traditi
 
 \section{Ways of Ensuring Reactivity of a Program}
 
-The term “reactive” stands for responsive, resilient, elastic message-driven systems, as stated by the Reactive Manifesto. Different solutions have been used in the past in order to ensure the correct message exchange while retaining loose coupling, isolation and location transparency. The most common solutions in the object-oriented setting are the Observer pattern (used as a stand-alone solution or in a publish/subscribe system), Event-driven systems and callback mechanisms, and data bindings.
-\\*
+The term “reactive” stands for responsive, resilient, elastic message-driven systems, as stated by the Reactive Manifesto \cite{rm}. Different solutions have been used in the past in order to ensure the correct message exchange while retaining loose coupling, isolation and location transparency. The most common solutions in the object-oriented setting are the Observer pattern (used as a stand-alone solution or in a publish/subscribe system), Event-driven systems and callback mechanisms, and data bindings.
 
 \subsection{Observer Pattern}
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{observer}
-\caption{Observer Pattern}\cite{ojpg}
+\includegraphics[width=\columnwidth]{o}
+\caption{Observer Pattern}
 \end{figure}
 %\centerline{}
 
-With the use of the Observer pattern, one can successfully complete passing notifications from one part of the program to another. However, the pattern is also highly criticized due to the overhead it creates. It causes inversion of control and can potentially cause memory leaks. In addition, it creates a large amount of boilerplate code that its implementation requires and pollutes the interface of the related classes. The Observer pattern is briefly described by the UML diagram in Figure 1.
+
+With the use of the Observer pattern \cite{ojpg}, one can successfully complete passing notifications from one part of the program to another. However, the pattern is also highly criticized due to the overhead it creates. It causes inversion of control and can potentially cause memory leaks. In addition, it creates a large amount of boilerplate code that its implementation requires and pollutes the interface of the related classes. The Observer pattern is briefly described by the UML diagram in Figure 1.
 
 Figure 2 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[frame=single, linewidth=\columnwidth]  % Start your code-block
-
+\begin{lstlisting}[frame=single,caption=Observer Pattern in Scala language, captionpos=b,linewidth=\columnwidth, language=java, basicstyle=\small, morekeywords={def,val,var,object, trait}, keywordstyle=\color{blue},
+numbers=left, numbersep=5pt] 
 trait Observable {
   val observers = 
     scala.collection.mutable.Set[Observer]()
@@ -174,8 +173,6 @@ object Observering {
 }
 
 \end{lstlisting}
-\caption{Observer Pattern}
-\end{figure}
 
 As can be seen from the code, there is a lot of code dealing with the wiring and communication explicitly, thus making the code of the program less readable. Furthermore, in this implementation the changes to the variables are treated in a way that does not let the variable \textit{c} determine which of the two source variables caused the change. In addition, if we have a more complicated program, the code for the updating of \textit{c} will be mixed in with the implementation of the business logic of the application. The implementation of the notification logic also normally adds methods for registering and unregistering observers, which pollute the API of the classes.
 
@@ -188,17 +185,15 @@ Furthermore, there is no way to determine in what order the event handlers will 
 
 The same statement holds true for callbacks - every subscriber would have to contact the host emitting the messages and pass a reference to the callback function. Callbacks also hinder the static reasoning about the behavior of a program because of the inversion of control.
 
-Microsoft's .NET framework offers an interesting and quite useful approach for propagating data changes in the back-end of the program, in the UI, or between the back-end computations and the UI. They introduce a special type of properties called ``dependency properties'', which can be defined on objects inheriting from DependencyObject. Basically, if you want to track automatically the changes of a property, a common approach would be to implement it as a DependencyProperty of a specific DependencyObject. 
+Microsoft's .NET framework offers an interesting and quite useful approach for propagating data changes in the back-end of the program, in the UI, or between the back-end computations and the UI \cite{dp}. They introduce a special type of properties called ``dependency properties'', which can be defined on objects inheriting from DependencyObject. Basically, if you want to track automatically the changes of a property, a common approach would be to implement it as a DependencyProperty of a specific DependencyObject. 
 
-Each dependency property has to be specially registered using a factory method, so that the framework knows to treat it differently. When this method is invoked, it is passed the following parameters: name of the property, its type, its owner class, default value and a callback that is to be executed when the value of the property changes. Figure 3 shows an implementation of the \textit{c = a + b} example using dependency properties in the C\# programming language. As can be seen in the code listing, we have an object DependencyObjectSum with dependency properties \textit{AProperty},\textit{ BProperty} and \textit{CProperty}, wrapping regular properties \textit{A}, \textit{B} and \textit{C}. When the values of \textit{A} and \textit{B} change, a callback is fired to reevaluate \textit{C}. 
+Each dependency property has to be specially registered using a factory method, so that the framework knows to treat it differently. When this method is invoked, it is passed the following parameters: name of the property, its type, its owner class, default value and a callback that is to be executed when the value of the property changes. Listing 2 shows an implementation of the \textit{c = a + b} example using dependency properties in the C\# programming language. As can be seen in the code listing, we have an object DependencyObjectSum with dependency properties \textit{AProperty},\textit{ BProperty} and \textit{CProperty}, wrapping regular properties \textit{A}, \textit{B} and \textit{C}. When the values of \textit{A} and \textit{B} change, a callback is fired to reevaluate \textit{C}. 
 
-The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties also enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls, which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Figure 4. (The language that Silverlight and WPF use to define the user interface is XAML - Extensible Application Markup Language.)
+The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties also enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls, which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Listing 3. (The language that Silverlight and WPF use to define the user interface is XAML - Extensible Application Markup Language)
 
 However, this approach has a couple of setbacks. First, it requires a lot of boilerplate code even in this simple scenario. Second, the wiring requires typing the name of the property as a string, not making use of static type-checking. Thus, a small typo can take hours to debug. Last, dependency objects and properties usually cause a lot of memory consumption overhead, can lead to performance issues and even memory leaks when not handled carefully.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[frame=single, linewidth=\columnwidth]
+\begin{lstlisting}[frame=single, caption={DependencyObjectSum.cs. In that file are defined three dependency properties, where C changes every time when new values are assigned to A or B} ,captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={readonly, set, get, typeof}, keywordstyle=\color{blue}, numbers=left, numbersep=5pt]
  public class DependencyObjectSum : 
 		DependencyObject {
   public int A {
@@ -245,49 +240,43 @@ public static readonly DependencyProperty
  typeof(int), typeof(DependencyObjectSum),
  new PropertyMetadata(0, null));
 
-  private static void OnAddendChanged(
-    DependencyObject d, 
-    DependencyPropertyChangedEventArgs e)
-  {
-    DependencyObjectSum thisObject = 
-     d as DependencyObjectSum;
+ private static void OnAddedChanged(
+   DependencyObject d, 
+   DependencyPropertyChangedEventArgs e)
+ {
+   DependencyObjectSum thisObject = 
+    d as DependencyObjectSum;
 
-    if (thisObject != null)
-    {
-      thisObject.C = 
-        thisObject.A + thisObject.B;
-    }
-  }
+   if (thisObject != null)
+   {
+     thisObject.C = 
+       thisObject.A + thisObject.B;
+   }
+ }
 }
 \end{lstlisting}
-\caption{DependencyObjectSum.cs}
-\end{figure}
 
-\begin{figure}
-\centering
-\begin{lstlisting}[frame=single, linewidth=\columnwidth]
-
+\begin{lstlisting}[frame=single, caption={DependencyObjectSum.xaml. Here three different text boxes are defined for testing the code from the previous listing},captionpos=b,linewidth=\columnwidth, basicstyle=\small, morekeywords={Source, Path}, keywordstyle=\color{blue},
+numbers=left, numbersep=5pt]
  <Grid.Resources>
    <local:DependencyObjectSum x:Key="sum" />
  </Grid.Resources>
 
- <TextBox Text="{Binding Source=
-	{StaticResource sum},
-	 Path=A, Mode=TwoWay}" />
- <TextBox Text="{Binding Source=
-     {StaticResource sum}, 
-	Path=B, Mode=TwoWay}" />
- <TextBox Text="{Binding Source=
-	{StaticResource sum}, 
-	Path=C, Mode=OneWay}" />
+ <TextBox Text="{Binding 
+	Source = {StaticResource sum}, 
+	Path = A, Mode = TwoWay}" />
+ <TextBox Text="{Binding 
+	Source = {StaticResource sum}, 
+	Path = B, Mode = TwoWay}" />
+ <TextBox Text="{Binding 
+	Source = {StaticResource sum}, 
+	Path = C, Mode = OneWay}" />
 
 \end{lstlisting}
-\caption{DependencyObjectSum.xaml}
-\end{figure}
 
 \subsection{Publish/Subscribe Middleware}
 
-Publish/subscribe or pub/sub paradigm is a very popular model for designing infrastructure for connecting different systems in a distributed environment. Publish/subscribe based middleware nowadays is integrated in a range of different domains for achieving various goals. A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to paper \cite{pubsub4} the event broker known also as event service is responsible for:
+Publish/subscribe or pub/sub paradigm is a very popular model for designing infrastructure for connecting different systems in a distributed environment. Publish/subscribe based middleware nowadays is integrated in a range of different domains for achieving various goals. A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to  Eugster's and Kermarrec's paper \cite{pubsub4} the event broker known also as event service is responsible for:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{space decoupling} - different participants do not know of each other, but communication between them is possible
@@ -299,11 +288,11 @@ Publishers and subscribers are only responsible for generating and consuming eve
 
 Publishers create information events and put them into the system, while subscribers wait for specific events and consume the generated information. One advantage of pub/sub based systems is that it is loosely-coupled, because publishers and subscribers do not know anything about each other and the only thing that connects them are the subscriptions and advertisements exchanged in the system.
 
-There are two main types of pub/sub systems - \textbf{subject-} or \textbf{topic-based} and \textbf{content based}. The first type defines different subjects or topics. All of the subscribers registered for a topic receive all of the events for that subject, although not all of them might be interested in everything generated for the same topic. That is why another kind of pub/sub systems was introduced - the so-called content-based type. It is considered to be more flexible because subscribers can filter the events generated for a topic based on the content of the message, and handle only those that they are really interested in. Some of the advantages of content-based over topic-based is that it is required to define less subjects and also has less overhead in maintenance.\cite{pubsuburl}
+There are two main types of pub/sub systems - \textbf{subject-}, \textbf{topic-} and \textbf{content based}. The first type defines different subjects or topics. All of the subscribers registered for a topic receive all of the events for that subject, although not all of them might be interested in everything generated for the same topic. That is why another kind of pub/sub systems was introduced - the so-called content-based type. It is considered to be more flexible because subscribers can filter the events generated for a topic based on the content of the message, and handle only those that they are really interested in. Some of the advantages of content-based over topic-based is that it is required to define less subjects and also has less overhead in maintenance \cite{pubsuburl}.
 
-On the other hand implementing content-based publish-subscribe system is not a trivial task. Efficiently matching an event when there are multiple number of subscribers and only one event broker, or efficiently multicasting events when there are many brokers, seems to be an arduous problem especially when the system is geographically distributed and scalability is required.  Paper \cite{pubsub1} contributes by providing a link-matching algorithm that can be used for content-based pub/sub systems to solve the problems mentioned.
+On the other hand implementing content-based publish-subscribe system is not a trivial task. Efficiently matching an event when there are multiple number of subscribers and only one event broker, or efficiently multicasting events when there are many brokers, seems to be an arduous problem especially when the system is geographically distributed and scalability is required. The authors Banavar, Chandra, Mukherjee, Nagarajarao, Strom and Sturman of paper \cite{pubsub1} contributes by providing a link-matching algorithm that can be used for content-based pub/sub systems to solve the problems mentioned.
 
-In papers \cite{pubsub2}, \cite{pubsub3} and \cite{pubsub5} publish-subscribe based middleware has been successfully used in a distributed environment consisting of mobile and wireless devices. Requirements and limitations of such networks are first introduced and then suggestions are given how pub/sub based middleware can help in solving related problems.
+In papers \cite{pubsub2}, \cite{pubsub3} and \cite{pubsub5} pub/sub based middleware has been successfully used in a distributed environment consisting of mobile and wireless devices. Requirements and limitations of such networks are first introduced and then suggestions are given how pub/sub based middleware can help in solving related problems.
 
 Nowadays very popular become systems that mostly consist of mobile devices or are entirely implemented using wireless sensors. If we compare publish-subscribe based systems to mobile and wireless sensor networks, we will find a lot in common - many participants either generate or consume information, and all of them should be able to reach all other nodes in the network. In contrast to publish-subscribe based systems where nodes are statically situated, mobile devices can change location very often and introduce new topology of the network. New Publish-Subscribe based middleware has to be implemented for the scenario where mobile and wireless sensors are used. It has to come up with solutions to the typical problems of mobile networks with roaming nodes, as well as to provide reliability for wireless sensors when they are used in scenarios like detecting fires in forests, measuring temperatures, or signals for earthquakes.
 
@@ -311,7 +300,7 @@ According to the authors of the  papers above, middleware based on publish-subsc
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item Its implementation usually relies on a variant of the Observer pattern, thus involving inversion of control flow.
-  \item Furthermore, special algorithms have to be used to deal with roaming publishers/subscribers.
+  \item Special algorithms have to be used to deal with roaming publishers/subscribers.
   \item Push based communication from the server to the clients may yield unbounded one-to-many communication.
 \end{itemize}
 
@@ -320,55 +309,49 @@ According to the authors of the  papers above, middleware based on publish-subsc
 Reactive programming aims to make the problems of communicating information between nodes redundant by introducing a new concept of message propagation. It offers immediate change of defined variables during the execution of the program without explicit need for reassignment of the new value.
 
 Let us refer to the example used in Section 2.2 in order to illustrate one significant feature of reactive programming. We have defined variables \textit{a}, \textit{b} and \textit{c}, where \textit{c}  is dependent on two others variables --  \textit{a} and \textit{b}. If \textit{a} and \textit{b} receive new values, but \textit{c} is reevaluated only with the new value of \textit{a} and with the old value of \textit{b}, or in other words a partial update for \textit{c} has occurred, resulting in a meaningless value of the variable \textit{c}. Variable \textit{c} should reevaluate only after both \textit{a} and \textit{b} have their new values.
-In REScala the example from above could be implemented as in Figure 5.
+In REScala the example from above could be implemented as in Listing 4.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[frame=single, linewidth=\columnwidth]  % Start your code-block
-
-      val a = Var(1)
-      val b = Var(2)
-      val c = Signal { a() + b() }
-
+\begin{lstlisting}[frame=single,caption={Reactive Sum},captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={val, Signal}, keywordstyle=\color{blue}]
+	val a = Var(1)
+	val b = Var(2)
+	val c = Signal { a() + b() }
 \end{lstlisting}
-\caption{Reactive sum}
-\end{figure}
 
 The types used in the example are built-in the REScala framework and are used to define reactive values.
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{Vars} are used to represent atomic types, such as int, string, etc., and can be used in reactive expressions (signals).
   \item \textbf{Signals} are declared as a constraint expression and their values can change automatically over time when other variables in the expression change. That is why sometimes in the literature signals are also referred to as \textbf{Behaviors}. It is possible for a signal to depend on another signal. 
-  \item \textbf{Reactives} - a common term for vars and signals as introduced in paper \cite{towards} to describe the concept of time-changing values. When the respective observable and reactive variables that participate in the same reactive expression are spread across different hosts we refer to them as \textbf{remote reactives}.
+  \item \textbf{Reactives} - a common term for vars and signals to describe the concept of time-changing values, that are introduced in "Towards Reactive Programming for Object-Oriented Applications" \cite{towards} . When the respective observable and reactive variables that participate in the same reactive expression are spread across different hosts we refer to them as \textbf{remote reactives}.
 
 \end{itemize}
 
 There are two important concepts that reactive programming deals with -- \textbf{data flow} of the program and \textbf{propagation of changes}.
 
-The data flow concerns the passage of information in the form of data and messages from one part of the application to another. In reactive programming, the focus is not so much on method calls (as is the case with Object-oriented programming), but on the logically existing dependencies between variables. These dependencies are usually depicted using a directed graph, where the nodes represent the variables of the program and the edges - the dependencies between them. The dependency graph for our simple example is shown in Figure 6.
+The data flow concerns the passage of information in the form of data and messages from one part of the application to another. In reactive programming, the focus is not so much on method calls (as is the case with Object-Oriented programming), but on the logically existing dependencies between variables. These dependencies are usually depicted using a directed graph, where the nodes represent the variables of the program and the edges - the dependencies between them. The dependency graph for our simple example is shown in Figure 2.
 
 \begin{figure}
 \centering
-\includegraphics[width=3cm]{dependencyGraph}
+\includegraphics[width=7cm]{dependencyGraph}
 \caption{Dependency Graph}
 \end{figure}
 
-This \textbf{Dependency Graph} is formally defined as a directed graph \textit{D = \{V, E\}}, where \textit{V} are all variables V = $v_{1}$,$ v_{2}$, ... , $v_{n}$  are  defined in a component of a reactive program, and \textit{E} represents all the edges in the graph. There is an edge $e_{ij}$ from variable $v_{ i}$ to variable $v_{j}$ , if  $v_{j}$ is a reactive variable defined through an expression in which $v_{i}$ participates.  We also say that a variable $v_{c}$ is dependent on a variables $v_{a}$ or $v_{b}$ if there are paths from $v_{a}$ or $v_{b}$ to $v_{c}$. \cite{dream}
+This \textbf{Dependency Graph} is formally defined as a directed graph \textit{D = \{V, E\}}, where \textit{V} are all variables V = $v_{1}$,$ v_{2}$, ... , $v_{n}$  are  defined in a component of a reactive program, and \textit{E} represents all the edges in the graph. There is an edge $e_{ij}$ from variable $v_{ i}$ to variable $v_{j}$ , if  $v_{j}$ is a reactive variable defined through an expression in which $v_{i}$ participates.  We also say that a variable $v_{c}$ is dependent on a variables $v_{a}$ or $v_{b}$ if there are paths from $v_{a}$ or $v_{b}$ to $v_{c}$ \cite{dream}.
 
-In general, the lifecycle of reactive applications is described in terms of update turns.  An \textbf{update turn} starts when a change occurs inside the reactive network of an application and this change has to be passed on to the dependent variables and cause their revaluation. These update turns can be split into the following phases: \textbf{admission phase} and \textbf{propagation phase}. The admission phase is the first one and it is characterized by the fact that new values for some input nodes are assigned. After that the propagation phase starts, during which the new values of the changed nodes are made visible to the variables that use them. Only the nodes that are transitively reachable from the source nodes have to participate in the propagation phase, because only dependent reactive values have the potential to be updated\cite{sidup}. Different solutions have been proposed in order to ensure that the changes will be correctly propagated in the dependency graph with different consistency guarantees.
+In general, the lifecycle of reactive applications is described in terms of update turns.  An \textbf{update turn} starts when a change occurs inside the reactive network of an application and this change has to be passed on to the dependent variables and cause their revaluation. These update turns can be split into the following phases: \textbf{admission phase} and \textbf{propagation phase}. The admission phase is the first one and it is characterized by the fact that new values for some input nodes are assigned. After that the propagation phase starts, during which the new values of the changed nodes are made visible to the variables that use them. Only the nodes that are transitively reachable from the source nodes have to participate in the propagation phase, because only dependent reactive values have the potential to be updated \cite{sidup}. Different solutions have been proposed in order to ensure that the changes will be correctly propagated in the dependency graph with different consistency guarantees.
 
 The main issues with the propagation of changes is determining a way in which all dependent nodes are evaluated with least amount of messages passed and without obtaining spurious values. Such inconsistencies (called glitches) may be obtained as a result of a partial update for example -- when the value of a variable is overwritten without taking into account the new values of all the variables it depends on.
 
 Glitches are to be avoided, as they represent an invalid state of the program. In a local setting, glitch freedom can be obtained by topologically sorting the variables and updating them in levels. In this way, a variable is only updated after all its dependent variables have changed their values. In our example the variables \textit{a} and \textit{b} can be considered at level 0, while \textit{c} is at level 1. Therefore, \textit{a} and \textit{b} can be potentially evaluated and update at the same time and the evaluation of \textit{c} can occur only after that.
 
-Another thing that reactive applications usually consider is \textbf{dynamic dependencies}. In a reactive program it is possible that at some point reactive variables change the variables on which they depend, as compared to other stages of the application. This must be properly reflected in the dependency graph in order to propagate the changes correctly. Dynamic dependencies provide the following two important features\cite{sidup}:
+Another thing that reactive applications usually consider is \textbf{dynamic dependencies}. In a reactive program it is possible that at some point reactive variables change the variables on which they depend, as compared to other stages of the application. This must be properly reflected in the dependency graph in order to propagate the changes correctly. Dynamic dependencies provide the following two important features \cite{sidup}:
 
 \begin{itemize} 
 \item\textbf{Conditionally accessed input values} - This feature describes the case when a variable is dependent on other variables, but not always on all of them. If at the current point of execution our main variable is not dependent on the updated input value, a reevaluation is not needed.
 
 For instance, if we have \textit{z = if c then x else y, z} will always depend on the value of \textit{c}. However, depending whether \textit{c = true} or \textit{c = false, z} will need to be evaluated either when \textit{x} changes or when \textit{y} changes. We say that \textit{z} has a dynamic dependency on \textit{x and y}.
 
-\item\textbf{Higher Order Reactives} -– These are reactive values that depend on other reactive values. That feature is very important in a distributed setting, because it allows dynamic dependencies. In a distributed environment where hosts can connect and disconnect at any time, higher order reactives are needed to ensure the proper functioning of the system. \cite{sidup}
+\item\textbf{Higher Order Reactives} -– These are reactive values that depend on other reactive values. That feature is very important in a distributed setting, because it allows dynamic dependencies. In a distributed environment where hosts can connect and disconnect at any time, higher order reactives are needed to ensure the proper functioning of the system \cite{sidup}.
 
 \end{itemize}
 
@@ -412,7 +395,7 @@ Once the propagation phase starts, the nodes that can be potentially updated wai
 This organization allows all dependent nodes to execute on different threads and be governed only by the pulses they receive.
 
 \subsection{AmbientTalk/R}
-AmbientTalk is a scripting programming language embedded in Java serving the purposes of distributed programming. There is a bridge between AmbientTalk and Java, ensuring that objects of one language can communicate with objects from the other.
+AmbientTalk \cite{loosely} is a scripting programming language embedded in Java serving the purposes of distributed programming. There is a bridge between AmbientTalk and Java, ensuring that objects of one language can communicate with objects from the other.
 
 AmbientTalks is a strictly event-driven programming language. It supports only event loop concurrency and all concurrent activities are represented as events, handled sequentially by an event loop thread. The distributed objects communicate by passing asynchronous messages.
 
@@ -516,7 +499,7 @@ However, by gaining support for dynamic dependencies and higher order reactives,
 SID-UP \cite{sidup} supports dynamic topology changes in the same way it handles dynamic dependencies among variables in the dependency graph - through higher order reactives. The changes in the network require that the sets of identifier nodes stored on their dependent nodes be updated. First, the nodes which are immediately affected are updated, and then the changes are propagated using the standard propagation algorithm. The nodes keep a flag whether their dependencies on other nodes have changed similarly to their behavior when the value of a variable is updated. When changed, the node forwards the changed or unchanged pulse for the set of dependencies along with the one for the value it keeps.
 
 \section{Related Work}
-Reactive programming was first introduced with the aim to support interactive animations in Haskell. \cite{haskell} More recently, Haskell was also extended to include constructs expressing reactive values, corresponding to vals and signals in the notation used in this paper, as well as events.  \cite{haskell2} \cite{haskell3} FrTime \cite{scheme} is a reactive language implemented for Scheme, that along with the discussed Scala.React, Scala.Rx and REScala conclude the most important reactive programming technologies in the functional programming world.
+Reactive programming was first introduced with the aim to support interactive animations in Haskell \cite{haskell}. More recently, Haskell was also extended to include constructs expressing reactive values, corresponding to vals and signals in the notation used in this paper, as well as events \cite{haskell2} \cite{haskell3}. FrTime \cite{scheme} is a reactive language implemented for Scheme, that along with the discussed Scala.React, Scala.Rx and REScala conclude the most important reactive programming technologies in the functional programming world.
 
 As already described, AmbientTalk/R is a reactive programming solution for Java. Flapjax \cite{javascript} for JavaScript and Rx \cite{netrx} for .NET applications conclude the most popular reactive libraries.
 
@@ -592,6 +575,8 @@ This paper has been written for the Seminar Implementation of Modern Programming
 \bibitem{ojpg}{\url{ http://en.wikipedia.org/wiki/Observer_pattern#mediaviewer/File:Observer.svg}}
 
 \bibitem{pubsuburl}{\url{http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern}}
+
+\bibitem{dp}{\url{http://msdn.microsoft.com/en-us/library/ms752914%28v=vs.110%29.aspx}}
 
 
 \end{thebibliography}
