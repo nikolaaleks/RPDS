@@ -114,7 +114,6 @@ The rest of the paper is structured as follows: Section 2 summarizes the traditi
 \section{Ways of Ensuring Reactivity of a Program}
 
 The term “reactive” stands for responsive, resilient, elastic message-driven systems, as stated by the Reactive Manifesto \cite{rm}. Different solutions have been used in the past in order to ensure the correct message exchange while retaining loose coupling, isolation and location transparency. The most common solutions in the object-oriented setting are the Observer pattern (used as a stand-alone solution or in a publish/subscribe system), Event-driven systems and callback mechanisms, and data bindings.
-\\*
 
 \subsection{Observer Pattern}
 
@@ -130,9 +129,7 @@ With the use of the Observer pattern \cite{ojpg}, one can successfully complete 
 
 Figure 2 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[linewidth=\columnwidth, language=java, basicstyle=\small, morekeywords={def,val,var,object, trait}, keywordstyle=\color{blue},
+\begin{lstlisting}[frame=single,caption=Observer Pattern in Scala language, captionpos=b,linewidth=\columnwidth, language=java, basicstyle=\small, morekeywords={def,val,var,object, trait}, keywordstyle=\color{blue},
 numbers=left, numbersep=5pt] 
 trait Observable {
   val observers = 
@@ -176,8 +173,6 @@ object Observering {
 }
 
 \end{lstlisting}
-\caption{Observer Pattern}
-\end{figure}
 
 As can be seen from the code, there is a lot of code dealing with the wiring and communication explicitly, thus making the code of the program less readable. Furthermore, in this implementation the changes to the variables are treated in a way that does not let the variable \textit{c} determine which of the two source variables caused the change. In addition, if we have a more complicated program, the code for the updating of \textit{c} will be mixed in with the implementation of the business logic of the application. The implementation of the notification logic also normally adds methods for registering and unregistering observers, which pollute the API of the classes.
 
@@ -198,10 +193,7 @@ The approach is also widely used with Microsoft's frameworks Windows Presentatio
 
 However, this approach has a couple of setbacks. First, it requires a lot of boilerplate code even in this simple scenario. Second, the wiring requires typing the name of the property as a string, not making use of static type-checking. Thus, a small typo can take hours to debug. Last, dependency objects and properties usually cause a lot of memory consumption overhead, can lead to performance issues and even memory leaks when not handled carefully.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={readonly, set, get, typeof}, keywordstyle=\color{blue},
-numbers=left, numbersep=5pt]
+\begin{lstlisting}[frame=single, caption={DependencyObjectSum.cs. In that file are defined three dependency properties, where C changes every time when new values are assigned to A or B} ,captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={readonly, set, get, typeof}, keywordstyle=\color{blue}, numbers=left, numbersep=5pt]
  public class DependencyObjectSum : 
 		DependencyObject {
   public int A {
@@ -248,27 +240,23 @@ public static readonly DependencyProperty
  typeof(int), typeof(DependencyObjectSum),
  new PropertyMetadata(0, null));
 
-  private static void OnAddendChanged(
-    DependencyObject d, 
-    DependencyPropertyChangedEventArgs e)
-  {
-    DependencyObjectSum thisObject = 
-     d as DependencyObjectSum;
+ private static void OnAddedChanged(
+   DependencyObject d, 
+   DependencyPropertyChangedEventArgs e)
+ {
+   DependencyObjectSum thisObject = 
+    d as DependencyObjectSum;
 
-    if (thisObject != null)
-    {
-      thisObject.C = 
-        thisObject.A + thisObject.B;
-    }
-  }
+   if (thisObject != null)
+   {
+     thisObject.C = 
+       thisObject.A + thisObject.B;
+   }
+ }
 }
 \end{lstlisting}
-\caption{DependencyObjectSum.cs}
-\end{figure}
 
-\begin{figure}
-\centering
-\begin{lstlisting}[linewidth=\columnwidth, basicstyle=\small, morekeywords={Source, Path}, keywordstyle=\color{blue},
+\begin{lstlisting}[frame=single, caption={DependencyObjectSum.xaml. Here three different text boxes are defined for testing the code from the previous listing},captionpos=b,linewidth=\columnwidth, basicstyle=\small, morekeywords={Source, Path}, keywordstyle=\color{blue},
 numbers=left, numbersep=5pt]
  <Grid.Resources>
    <local:DependencyObjectSum x:Key="sum" />
@@ -285,8 +273,6 @@ numbers=left, numbersep=5pt]
 	Path = C, Mode = OneWay}" />
 
 \end{lstlisting}
-\caption{DependencyObjectSum.xaml}
-\end{figure}
 
 \subsection{Publish/Subscribe Middleware}
 
@@ -325,15 +311,11 @@ Reactive programming aims to make the problems of communicating information betw
 Let us refer to the example used in Section 2.2 in order to illustrate one significant feature of reactive programming. We have defined variables \textit{a}, \textit{b} and \textit{c}, where \textit{c}  is dependent on two others variables --  \textit{a} and \textit{b}. If \textit{a} and \textit{b} receive new values, but \textit{c} is reevaluated only with the new value of \textit{a} and with the old value of \textit{b}, or in other words a partial update for \textit{c} has occurred, resulting in a meaningless value of the variable \textit{c}. Variable \textit{c} should reevaluate only after both \textit{a} and \textit{b} have their new values.
 In REScala the example from above could be implemented as in Figure 5.
 
-\begin{figure}
-\centering
-\begin{lstlisting}[linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={val, Signal}, keywordstyle=\color{blue}]
+\begin{lstlisting}[frame=single,caption={Reactive Sum},captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={val, Signal}, keywordstyle=\color{blue}]
 	val a = Var(1)
 	val b = Var(2)
 	val c = Signal { a() + b() }
 \end{lstlisting}
-\caption{Reactive sum}
-\end{figure}
 
 The types used in the example are built-in the REScala framework and are used to define reactive values.
 
