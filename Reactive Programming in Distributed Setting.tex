@@ -75,9 +75,9 @@
 \maketitle
 
 \begin{abstract}
-Distributed computing is a fast emerging field in the sphere of software technologies. This trend has its roots in the ever-growing range of software applications on the one hand, and the advantages that distributed systems have over centralized computing on the other. However, distributed programming introduces new challenges for the development of robust and performant data-driven applications, such as finding solutions for consistent change propagation between remote hosts and for handling the dynamic connecting and disconnecting of hosts.
+Distributed programming introduces new challenges for the development of robust and performant data-driven applications. This stems from the fact that changes to values in one part of the application have to be correctly propagated not only within the same device, but also between remote hosts. The tasks becomes even more difficult if the program requires handling dynamic connecting and disconnecting of hosts.
 
-This paper will focus on the ways these difficulties can be addressed using reactive programming by examining studies on traditional approaches to distributed programming. The suggestions we have scrutinized include Scala libraries, publish/subscribe middleware and concrete algorithm suggestions like DREAM, ELM and SID-UP.
+Reactive programming has already proven its benefits in local settings\cite{bridging}. This paper will focus on the ways it can be used to address the afore-mentioned difficulties of distributed programming by examining several studies on Scala libraries, publish/subscribe middleware and concrete algorithms like DREAM, a distributed version of ELM, and SID-UP.
 
 \end{abstract}
 
@@ -96,9 +96,10 @@ Distributed Systems, Observer Pattern, Event-Driven Programming, Reactive Progra
 \section{Introduction}
 
 Technology has become a part of our everyday life due to the many improvements it brings to our lives. Applications range from large client-server architectures backing up the work of large corporations, through mobile devices used ubiquitously for tracking and sharing sport and social activities, to pervasive computing implementing monitoring and controlling of the ambient. The numerous usages require more complicated networking and architectures to support them. This is where distributed applications come in handy with their resource sharing capabilities, good cost/performance ratio and fault tolerance.
+
 Despite their many advantages, distributed systems also pose some challenges to developers, the most important of which being the correct synchronization between distributed nodes. Exchanging messages from one host to another and upholding different consistency guarantees in particular become much more difficult with the introduction of distribution. Moreover, the task of handling the communication efficiently in a decentralized and potentially dynamic network calls for a revision of the existing paradigms. 
 
-Various solutions have been proposed in order to establish a good mechanism that deals with the communication reliably. We will discuss and compare some of them in terms of their ease of use and benefits. The focus will be on the possible use of reactive applications, which have already been shown to efficiently address the requirements of passing messages between layers in general software applications \cite{bridging}. They provide the expected responsiveness and fault-tolerance, being able to handle a lot of content and scale without significant difficulties. In the current paper we will examine their possible use in distributed applications and the implications of this approach.
+Several solutions have been proposed in order to establish a mechanism that deals with the communication reliably, allowing the establishment and adherence to guarantees regarding the way the messages are passed. We will discuss and compare some of them in terms of their possible applications in dynamic distributed applications. The focus will be on the possible use of reactive programming. In the current paper we will examine several reactive suggestions to the challenges of distributed computing.
 
 This paper makes the following contributions:
 
@@ -106,10 +107,12 @@ This paper makes the following contributions:
   \item It describes a common organization of a distributed system, such as the publish/subscribe 
   \item It summarizes the main approaches for developing reactive applications in a distributed setting
   \item It outlines the challenges of the development of distributed applications
-  \item Represents a structured analysis of the latest and most exhaustive research papers in the sphere of distributed reactive applications.
+  \item It introduces the main concepts of reactive programming
+  \item Represents a structured analysis of the latest and most exhaustive research papers in the sphere of distributed reactive applications
+  \item It argues that reactive programming can be leveraged to address the needs of distributed applications.
 \end{itemize}
 
-The rest of the paper is structured as follows: Section 2 summarizes the traditional approaches for ensuring the reactivity of a program. It briefly describes the Observer pattern, events and callbacks as means of propagating changes, and the organization of general publish/subscribe systems. It derives the problems connected to the use of each of these approaches and argues the need for a new programming paradigm. Section 3 proposes Reactive programming as an alternative to these approaches and explains the common terms such as dependency graph, glitches, reactive variables. It also introduces the algorithms that will be later compared in terms of the solutions they propose to the common challenges of distributed reactive programming. Section 4 discusses these problems - propagation of changes in the dependency graph of reactive applications, ensuring glitch-freedom and handling dynamic network topologies. In Section 5 we give some overview of Related Work. Section 6 concludes the paper, giving a summary of the present study.
+The rest of the paper is structured as follows: Section 2 summarizes the traditional approaches for ensuring the reactivity of a program. It also describes the organization of general publish/subscribe systems such as JMS. Section 3 proposes Reactive programming as an alternative to these approaches and explains the basics of reactive programming. It also introduces the algorithms that will be later compared in terms of the solutions they propose to the common challenges of distributed reactive programming. Section 4 discusses common problems - propagation of changes in reactive applications, ensuring glitch-freedom and handling dynamic network topologies. In Section 5 we give some overview of Related Work. Section 6 concludes the paper, giving a summary of the present study.
 
 \section{Ways of Ensuring Reactivity of a Program}
 
@@ -119,13 +122,13 @@ The term “reactive” stands for responsive, resilient, elastic message-driven
 
 \begin{figure}
 \centering
-\includegraphics[width=\columnwidth]{o}
+\includegraphics[width=\columnwidth]{observer}
 \caption{Observer Pattern}
 \end{figure}
 %\centerline{}
 
 
-With the use of the Observer pattern \cite{ojpg}, one can successfully complete passing notifications from one part of the program to another. However, the pattern is also highly criticized due to the overhead it creates. It causes inversion of control and can potentially cause memory leaks. In addition, it creates a large amount of boilerplate code that its implementation requires and pollutes the interface of the related classes. The Observer pattern is briefly described by the UML diagram in Figure 1.
+The Observer pattern \cite{ojpg} is commonly used to implement distributed event handling. However, the pattern is also highly criticized due to the overhead it creates in terms of boilerplate code that has to be added to the application. Its implementation also involves pollution of the interface of the classes because of the methods added in order to handle the message passing. It also causes inversion of control and can potentially cause memory leaks. The Observer pattern is briefly described by the UML diagram in Figure 1.
 
 Figure 2 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
 
@@ -179,17 +182,17 @@ As can be seen from the code, there is a lot of code dealing with the wiring and
 \subsection{Events, Callbacks and Data Binding}
 
 The most popular alternatives to the Observer pattern in recent years are events and callbacks. 
-Events provide high flexibility, but also have a couple of drawbacks. For example, in the case of multiple handlers of the same event (which is often the case), all subscribers have to listen for the same event. When the subscribers want to implement the same logic at the occurrence of the event, the code that does the specific goal has to be duplicated on every client. This can be considered a violation of the DRY \textit{(Don't repeat yourself)} principle and is bound to cause issues in a big commercial system.
+Events are easier to use in comparison to implementing the Observer pattern, but also have a couple of drawbacks. For example, in the case of multiple handlers of the same event (which is often the case), all subscribers have to listen for the same event. When the subscribers want to implement the same logic at the occurrence of the event, the code that does the specific goal has to be duplicated on every client and can be considered a violation of the DRY \textit{(Don't repeat yourself)} principle. We will see later in the paper how reactive programming avoids this problem.
 
 Furthermore, there is no way to determine in what order the event handlers will be executed and to determine statically the control flow of the application.
 
 The same statement holds true for callbacks - every subscriber would have to contact the host emitting the messages and pass a reference to the callback function. Callbacks also hinder the static reasoning about the behavior of a program because of the inversion of control.
 
-Microsoft's .NET framework offers an interesting and quite useful approach for propagating data changes in the back-end of the program, in the UI, or between the back-end computations and the UI \cite{dp}. They introduce a special type of properties called ``dependency properties'', which can be defined on objects inheriting from DependencyObject. Basically, if you want to track automatically the changes of a property, a common approach would be to implement it as a DependencyProperty of a specific DependencyObject. 
+Microsoft's .NET framework \cite{net} offers an interesting and quite useful approach for propagating data changes in the back-end of the program, in the UI, or between the back-end computations and the UI \cite{dp}. They introduce a special type of properties called ``dependency properties'', which can be defined on objects inheriting from DependencyObject. Basically, if you want to track automatically the changes of a property, a common approach would be to implement it as a DependencyProperty of a specific DependencyObject. 
 
 Each dependency property has to be specially registered using a factory method, so that the framework knows to treat it differently. When this method is invoked, it is passed the following parameters: name of the property, its type, its owner class, default value and a callback that is to be executed when the value of the property changes. Listing 2 shows an implementation of the \textit{c = a + b} example using dependency properties in the C\# programming language. As can be seen in the code listing, we have an object DependencyObjectSum with dependency properties \textit{AProperty},\textit{ BProperty} and \textit{CProperty}, wrapping regular properties \textit{A}, \textit{B} and \textit{C}. When the values of \textit{A} and \textit{B} change, a callback is fired to reevaluate \textit{C}. 
 
-The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties also enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls, which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Listing 3. (The language that Silverlight and WPF use to define the user interface is XAML - Extensible Application Markup Language)
+The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties also enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls, which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Listing 3. (The language that Silverlight and WPF use to define the user interface is XAML - Extensible Application Markup Language.)
 
 However, this approach has a couple of setbacks. First, it requires a lot of boilerplate code even in this simple scenario. Second, the wiring requires typing the name of the property as a string, not making use of static type-checking. Thus, a small typo can take hours to debug. Last, dependency objects and properties usually cause a lot of memory consumption overhead, can lead to performance issues and even memory leaks when not handled carefully.
 
@@ -306,7 +309,7 @@ According to the authors of the  papers above, middleware based on publish-subsc
 
 \section{Reactive Programming}
 
-Reactive programming aims to make the problems of communicating information between nodes redundant by introducing a new concept of message propagation. It offers immediate change of defined variables during the execution of the program without explicit need for reassignment of the new value.
+Reactive programming aims to render problems of communicating information between nodes obsolete by introducing a new concept of message propagation. It offers immediate change of defined variables during the execution of the program without explicit need for reassignment of the new value.
 
 Let us refer to the example used in Section 2.2 in order to illustrate one significant feature of reactive programming. We have defined variables \textit{a}, \textit{b} and \textit{c}, where \textit{c}  is dependent on two others variables --  \textit{a} and \textit{b}. If \textit{a} and \textit{b} receive new values, but \textit{c} is reevaluated only with the new value of \textit{a} and with the old value of \textit{b}, or in other words a partial update for \textit{c} has occurred, resulting in a meaningless value of the variable \textit{c}. Variable \textit{c} should reevaluate only after both \textit{a} and \textit{b} have their new values.
 In REScala the example from above could be implemented as in Listing 4.
@@ -332,7 +335,7 @@ The data flow concerns the passage of information in the form of data and messag
 
 \begin{figure}
 \centering
-\includegraphics[width=7cm]{dependencyGraph}
+\includegraphics[width=4cm]{dependencyGraph}
 \caption{Dependency Graph}
 \end{figure}
 
@@ -340,9 +343,9 @@ This \textbf{Dependency Graph} is formally defined as a directed graph \textit{D
 
 In general, the lifecycle of reactive applications is described in terms of update turns.  An \textbf{update turn} starts when a change occurs inside the reactive network of an application and this change has to be passed on to the dependent variables and cause their revaluation. These update turns can be split into the following phases: \textbf{admission phase} and \textbf{propagation phase}. The admission phase is the first one and it is characterized by the fact that new values for some input nodes are assigned. After that the propagation phase starts, during which the new values of the changed nodes are made visible to the variables that use them. Only the nodes that are transitively reachable from the source nodes have to participate in the propagation phase, because only dependent reactive values have the potential to be updated \cite{sidup}. Different solutions have been proposed in order to ensure that the changes will be correctly propagated in the dependency graph with different consistency guarantees.
 
-The main issues with the propagation of changes is determining a way in which all dependent nodes are evaluated with least amount of messages passed and without obtaining spurious values. Such inconsistencies (called glitches) may be obtained as a result of a partial update for example -- when the value of a variable is overwritten without taking into account the new values of all the variables it depends on.
+The main issues with the propagation of changes is determining a way in which all dependent nodes are evaluated with least amount of messages passed and without obtaining spurious values. Such inconsistencies may be obtained as a result of a partial update for example -- when the value of a variable is overwritten without taking into account the new values of all the variables it depends on. The term that is used to denote such invalid states of a variable or state of the programs is \textbf{glitches}.
 
-Glitches are to be avoided, as they represent an invalid state of the program. In a local setting, glitch freedom can be obtained by topologically sorting the variables and updating them in levels. In this way, a variable is only updated after all its dependent variables have changed their values. In our example the variables \textit{a} and \textit{b} can be considered at level 0, while \textit{c} is at level 1. Therefore, \textit{a} and \textit{b} can be potentially evaluated and update at the same time and the evaluation of \textit{c} can occur only after that.
+In a local setting, glitches can be avoided by topologically sorting the variables and updating them in levels. In this way, a variable is only updated after all its dependent variables have changed their values. In our example the variables \textit{a} and \textit{b} can be considered at level 0, while \textit{c} is at level 1. Therefore, \textit{a} and \textit{b} can be potentially evaluated and update at the same time and the evaluation of \textit{c} can occur only after that. In that way \textbf{glitch freedom} can be achieved.
 
 Another thing that reactive applications usually consider is \textbf{dynamic dependencies}. In a reactive program it is possible that at some point reactive variables change the variables on which they depend, as compared to other stages of the application. This must be properly reflected in the dependency graph in order to propagate the changes correctly. Dynamic dependencies provide the following two important features \cite{sidup}:
 
@@ -355,7 +358,7 @@ For instance, if we have \textit{z = if c then x else y, z} will always depend o
 
 \end{itemize}
 
-\textbf{Reactive languages} also support the typical for the imperative style of programming events. For example, in REScala there is built in event notifying when a change to a reactive value has been made. There are also a lot of conversion functions that create signals using the important information carried by events.
+\textbf{Reactive languages} also support the typical for the imperative style of programming events. For example, in REScala \cite{rescala} there is built-in event notifying when a change to a reactive value has been made. There are also a lot of conversion functions that create signals from events.
 
 In a nutshell, reactive programming keeps the expressiveness of imperative languages, but also introduces new easier ways of handling message propagation. In solves the problems connected to the use of the Observer pattern: \textit{verbosity, lack of static reasoning, inversion of control}. It manages the dependencies between values in the language implementation, not in the application logic, thus achieving better separation of concerns. There is also no scattered duplicated code, as is the case when events or callbacks are used and the developer is freed from the need to “manually” update the application layer with the changes arisen elsewhere in the program.
 
@@ -381,9 +384,11 @@ Clients advertise some reactive values and subscribe to changes of other reactiv
 \end{itemize}
 
 \subsection{ELM}
-The ELM algorithm proposed in \cite{elm} suggests a network organization which includes a central coordinator. This component's job is to broadcast every update turn's start to all input nodes. Every node then sends a “change” or “no change” pulse depending on whether it has been changed or not in this update turn. When a node receives signals from all nodes that it has a dependency on in the current turn, it reevaluates its value and sends a signal itself. The evaluation finishes when all nodes send a signal with their state.
+The ELM algorithm proposed in \cite{elm} suggests an algorithm for propagating value changes in a local setting. The authors suggest a network organization which includes a central coordinator. This component's job is to broadcast every update turn's start to all input nodes. Every node then sends a “change” or “no change” pulse depending on whether it has been changed or not in this update turn. When a node receives signals from all nodes that it has a dependency on in the current turn, it reevaluates its value and sends a signal itself. The evaluation finishes when all nodes send a signal with their state.
 
-The algorithm supports pipelining, i.e. the pulses can be propagated in wave fronts, thus enhancing parallelism in the propagation phase. Distributed settings benefit a lot from such an organization in the communication.
+The algorithm supports pipelining, i.e. the pulses can be propagated in wave fronts, thus enhancing parallelism in the propagation phase, from which distributed settings can benefit.
+
+Drechsler et al. \cite{sidup} devise a variation of this algorithm named ELM\textsuperscript{s} which can be used in distributed programming.
 
 \subsection{SID-UP}
 SID-UP \cite{sidup} also uses a central coordinator, which allows only one update turn at a time. However, it does not broadcast the update turn's start as in the ELM algorithm. Instead, the nodes that want to initiate an update contact it in order to obtain permission to start updating a source value. In addition, every node stores information about the source nodes it is transitively connected to and dependent upon.
@@ -395,21 +400,21 @@ Once the propagation phase starts, the nodes that can be potentially updated wai
 This organization allows all dependent nodes to execute on different threads and be governed only by the pulses they receive.
 
 \subsection{AmbientTalk/R}
-AmbientTalk \cite{loosely} is a scripting programming language embedded in Java serving the purposes of distributed programming. There is a bridge between AmbientTalk and Java, ensuring that objects of one language can communicate with objects from the other.
+AmbientTalk \cite{loosely} is an experimental scripting programming language that is designed for the purposes of distributed programming. There is a bridge between AmbientTalk and Java, ensuring that objects of one language can communicate with objects from the other, thus providing good interoperability between the two languages.
 
-AmbientTalks is a strictly event-driven programming language. It supports only event loop concurrency and all concurrent activities are represented as events, handled sequentially by an event loop thread. The distributed objects communicate by passing asynchronous messages.
+AmbientTalks is an event-driven programming language that supports only event loop concurrency. All concurrent activities are represented as events, handled sequentially by an event loop thread. The distributed objects communicate by passing asynchronous messages.
 
 AmbientTalk/R is a reactive extension of AmbientTalk that introduces support for reactive programming. Reactive variables can be defined using the makeReactive method on regular objects. The implementation defines two types of methods – Accessor and Mutator methods. The latter are required to be annotated using a special syntax which ensures that the system must take special care to avoid glitches after the method is executed.
 
 \section{Problems and Solutions Connected to the Distributed Environment}
-Each of the presented solutions addresses in one way or another the common problems of developing reactive applications in a distributed setting. The major concern is ensuring correct change propagation of the variables taking into account the dependencies between the variables. Another addressed matter is the way these suggestions can handle dynamic changes in the network, which is a frequently observed scenario with distributed environments.
+Each of the presented solutions addresses the common problems of developing reactive applications in a distributed setting. The major concern is ensuring correct change propagation of the variables taking into account the dependencies between the variables. Another addressed matter is the way these suggestions can handle dynamic changes in the network, which is a frequently observed scenario with distributed environments.
 
-\subsection{Change Propagation and Glitches}
+\subsection{Change Propagation Guarantees}
 \subsubsection{Scala.React and Scala.Rx}
 As Scala.React and Scala.Rx count on topological sorting of the nodes, there must be a centralized coordinator that keeps track of the whole network and manages the communication. In a distributed setting, such a solution is not very practical, as it yields unbounded one-to-many communication. This would not only increase the network traffic, but also render impossible any attempts on performing the computations in parallel. Therefore, in its pure form it is not applicable in a distributed environment.
 
 \subsubsection{Publish/Subscribe Systems}
-The authors of \cite{totalorder} propose a different classification of glitch freedom. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
+The authors of \cite{totalorder} propose a different classification of change propagation guarantees. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{Per-Publisher Total Order}: For any two messages m and m' and any two processes p and q, where {p, q} $\in$ Dest(m) $\cap$ Dest(m'). If sender(m) = sender(m'), then p delivers m before m' if and only if q delivers m before m'.
@@ -456,8 +461,8 @@ In order to achieve that guarantee, each broker receives the expression for ever
 DREAM implements atomic semantics using a Ticket Granting Server. When a broker receives a notification for a change in a variable, the broker contacts the TGS for all the leaves in the dependency graph that are dependent on that change. TGS returns them to the broker and observes if the broker sends the notifications to all of them in the correct order. When TGS receives acknowledgments for every notification it continues with the next request. This type of locking mechanism ascertains that an update request from only one broker can be processed at a time.
 
 \end{enumerate}
-\subsubsection{ELM}
-ELM \cite{elm} ensures that glitches are avoided by allowing only one update to be triggered at a time. In addition, it relies on messages being passed from every progenitor node to its dependencies, regardless of the fact whether their values have been changed. As every node waits for a pulse from all its dependencies, a partial update cannot occur.
+\subsubsection{ELM\textsuperscript{s}}
+ELM \cite{elm} ensures that glitches are avoided by allowing only one update to be triggered at a time and having every node wait for the incoming dependencies. Messages being passed from every progenitor node to its dependencies, regardless of the fact whether their values have been changed. As every node waits for a pulse from all its dependencies, a partial update cannot occur.
 
 \subsubsection{SID-UP}
 SID-UP \cite{sidup} adopts a similar approach to ELM. However, instead of the push-based communication in the admission phase, it uses pull-based requests to the centralized coordinator, thus avoiding one-to-many unbounded communication. In addition, it requires passing messages only from nodes involved in the update. This is made possible by the fact that every node is aware of the dependencies it has and the pulse carries information of the nodes being updated. In that way, unaffected hosts can be exempt from the message passing, which has the potential to save a lot of network traffic.
@@ -467,14 +472,14 @@ SID-UP \cite{sidup} adopts a similar approach to ELM. However, instead of the pu
 The different authors suggest different approaches for handling dynamic network topologies.
 
 \subsubsection{Pub/Sub}
-The Publish/Subscribe paradigm is developed specifically to implement loose coupling between message providers and consumers. Therefore, it provides good support for dynamic network topology. The authors of \cite{totalorder} specify two reliability guarantees:
+The Publish/Subscribe paradigm is developed specifically to implement loose coupling between message providers and consumers. Therefore, it provides good support for dynamic network topology. The authors Zhang et al. \cite{totalorder} specify two reliability guarantees:
 
 \begin{enumerate}
   \item \textbf{Liveness}: If a message m is sent by a process p to its destination group Dest(m), then all processes in Dest(m) will eventually deliver m.
   \item \textbf{Safety}: If messages m and n are delivered to both processes p and q, then m and n are delivered to both p and q in the appropriate order.
 \end{enumerate}
 
-They prove that it is impossible to withhold both guarantees provided that a failure occurs. A total ordering semantics is classified as "weak" if it ensures safety, but not liveness. They focus on safety, thus devising their algorithm in a way that it implements weak total ordering semantics. However, they also outline an approach that can be followed to implement liveness instead.
+The paper proves that it is impossible to withhold both guarantees provided that a failure occurs. A total ordering semantics is classified as "weak" if it ensures safety, but not liveness. The focus of the study is on safety, thus devising their algorithm in a way that it implements weak total ordering semantics. However, the authors also outline an approach that can be followed to implement liveness instead.
 
 \subsubsection{Ambient References and Behaviors}
 AmbientTalk/R proposes a new construct that handles the network changes. As the paper targets mobile ad-hoc networks, it does not rely on the standard architecture of Pub/Sub systems, involving a broker mediator. Instead, they define “ambient references” -- an abstraction over the appearing and disappearing services in the network. Basically, these ambient references represent a collection of nearby services of the same type. They are constantly kept up-to-date by the ambient reference itself using autonomous UDP queries.
@@ -506,7 +511,7 @@ As already described, AmbientTalk/R is a reactive programming solution for Java.
 Most if not all of these libraries include consistent change propagation using  stratification of the dependency graph in the local setting. However, some of the frameworks are not suitable for use in a distributed environment (e.g. because the language they target cannot be used both on the server and the client), or do not provide any glitch guarantees in that case. 
 
 \section{Conclusions}
-In this paper we have tried to prove that reactive applications can be very useful in distributed programming. First, we have started our work by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization. Second, we have introduced the reactive programming paradigm and its most important concept.
+In this paper we have shown that reactive applications can be very useful in distributed programming. First, we have started our work by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization. Second, we have introduced the reactive programming paradigm and its most important concept.
 
 After we have gathered enough basis knowledge for reactive programming in a distributed setting we compared existing approaches, such as Scala.React, Scala.Rx, ELM, SID-UP, AmbientTalk/R and DREAM. The criteria that we have chosen when conducting the comparison between the different algorithms were the way the systems ensure glitch freedom and achieving satisfying reactivity in the context of joining and leaving hosts. Our study finds Distributed Reactive Programming Middleware (DREAM) and Source Identifier Update Propagation Algorithm (SID-UP) to be the most  thorough and complete papers, shaping out the future path of reactive distributed programming.
 
@@ -577,6 +582,10 @@ This paper has been written for the Seminar Implementation of Modern Programming
 \bibitem{pubsuburl}{\url{http://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern}}
 
 \bibitem{dp}{\url{http://msdn.microsoft.com/en-us/library/ms752914%28v=vs.110%29.aspx}}
+
+\bibitem{net}{\url{http://www.microsoft.com/net}}
+
+\bibitem{rescala}{\url{http://www.guidosalvaneschi.com/rescala/main/index.html}}
 
 
 \end{thebibliography}
