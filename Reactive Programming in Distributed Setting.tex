@@ -130,7 +130,7 @@ The term “reactive” stands for responsive, resilient, elastic message-driven
 
 The Observer pattern \cite{ojpg} is commonly used to implement distributed event handling. However, the pattern is also highly criticized due to the overhead it creates in terms of boilerplate code that has to be added to the application. Its implementation also involves pollution of the interface of the classes because of the methods added in order to handle the message passing. In addition, it causes inversion of control and can potentially cause memory leaks. The Observer pattern is briefly described by the UML diagram in Figure 1.
 
-Figure 2 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
+Listing 1 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
 
 \begin{lstlisting}[frame=single,caption=Observer Pattern in Scala, captionpos=b,linewidth=\columnwidth, language=java, basicstyle=\small, morekeywords={def,val,var,object, trait}, keywordstyle=\color{blue},
 numbers=left, numbersep=5pt] 
@@ -322,7 +322,7 @@ Every JMS application consists of the following parts:
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
 
 \item \textbf{JMS provider} - a Java implementation of message oriented middleware that offers features for administration and control
-\item \textbf{JMS client} - an application written in Java that can produce and consume messages. Clients are divided into two categories: JMS publisher/producer and JMS subscriber/consumer depending on the action that they perform. It is also possible that a client can be both a producer and a consumer in the same distributed environment.
+\item \textbf{JMS client} - an application written in Java that can produce and consume messages. Clients are divided into two categories: \textbf{JMS publisher/producer} and \textbf{JMS subscriber/consumer} depending on the action that they perform. It is also possible that a client can be both a producer and a consumer in the same distributed environment.
 \item \textbf{JMS message} - wraps the object that is used for transferring the information between different JMS clients.
 \item \textbf{JMS queue} - a mechanism that assures that every consumer will receive the message no matter if it is interested or not. JMS queue is different from the normal queue that assures delivering of items at the same order as they entered the queue. JMS queue takes care that the consumer receives the message only once, but does not provide any guarantees as to the order in which the messages will be consumed by the subscribers.
 \item \textbf{JMS topic} - a way to distinguish between different messages. Consumers register for specific topics and  filtering is performed to ensure that only interested subscribers will be notified of a published message.
@@ -332,15 +332,15 @@ Every JMS application consists of the following parts:
 Another important feature of JMS is the programming model. There are two different implementations:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-\item Point-to-point - This programming model consists of a message sender, a consumer and a queue that connects them. For every consumer there is one message queue that assures that the message will be delivered. Every message stays in the queue until a consumer receives it and sends an acknowledgment for it or it expires. It is not required that both the producer and the consumer should be online upon sending or consuming the message. If there is no registered consumer for a message queue, all messages remain inside the queue until a consumer asks for them. Advantage of this programming model is that messages are always delivered to consumers and no data is lost. On the other hand in some applications consumers might not be interested in all type of messages, that is why another programming model is used where consumers can subscribe for specific messages – publish/subscribe.
-\item Publish/subscribe - JMS implements all features for publish/subscribe model that has already been discussed earlier in the paper. It is worth mentioning that in addition, the JMS API offers the use of durable subscriptions – messages are sent even when the subscribers are not active.
+\item \textbf{Point-to-point} - This programming model consists of a message sender, a consumer and a queue that connects them. For every consumer there is one message queue that assures that the message will be delivered. Every message stays in the queue until a consumer receives it and sends an acknowledgment for it or it expires. It is not required that both the producer and the consumer should be online upon sending or consuming the message. If there is no registered consumer for a message queue, all messages remain inside the queue until a consumer asks for them. Advantage of this programming model is that messages are always delivered to consumers and no data is lost. On the other hand in some applications consumers might not be interested in all type of messages, that is why another programming model is used where consumers can subscribe for specific messages – publish/subscribe.
+\item \textbf{Publish/subscribe} - JMS implements all features for publish/subscribe model that has already been discussed earlier in the paper. It is worth mentioning that in addition, the JMS API offers the use of durable subscriptions – messages are sent even when the subscribers are not active.
 
 \end{itemize}
 
 When a message is either sent or received, it is very important for JMS API to distinguish between two message consumptions:
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-\item Synchronous - when receive method is called, the execution thread of the consumer is blocked until the message is received or it times out.
-\item Asynchronous - the client can register a message listener with a consumer. When a message reaches its destination, that listener calls the specific method that handles the message. In this way the execution thread is not blocked and the consumer can perform other tasks, while still reading the message.
+\item \textbf{Synchronous} - when receive method is called, the execution thread of the consumer is blocked until the message is received or it times out.
+\item \textbf{Asynchronous} - the client can register a message listener with a consumer. When a message reaches its destination, that listener calls the specific method that handles the message. In this way the execution thread is not blocked and the consumer can perform other tasks, while still reading the message.
 
 \end{itemize}
 
