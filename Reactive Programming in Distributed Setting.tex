@@ -313,7 +313,7 @@ We will now look more closely into a particular publish/subscribe message servic
 \section*{Java Message Service}
 
 \smallskip
-JMS that stands for Java Message Service is a messaging standard used in Java EE platform for creating, sending, receiving and reading information messages between different client programs. This technology is applicable in a distributed environment and offers loose coupling, reliability and asynchronous communication.
+JMS that stands for Java Message Service is a messaging standard used in Java EE platform for creating, sending, receiving and reading information messages between different client programs \cite{jms} \cite{jmsd}. This technology is applicable in a distributed environment and offers loose coupling, reliability and asynchronous communication.
 
 Before giving detailed information about JMS let us first briefly introduce the general idea of messaging that is used today. Current distributed systems consist of numerous end hosts where different client applications establish connections and communicate with each other. In order to achieve reliable communication and satisfying speed with very short delay, stable infrastructure has to be built for such an environment.
 
@@ -488,7 +488,7 @@ The conflict resolution relies on the transmission of acknowledgments. Each publ
 
 \subsection*{Java Message Service}
 
-As mentioned before, JMS takes advantage of a message queue, but it has different properties than the traditional one. An ordinary queue would take care that all messages from the queue are recieved at the consumers in the same order in which they entered the queue. At the same time, a JMS queue only assures that a message is processed exactly once. That feature of JMS has a significant drawback in the application of reactive programming, because the order of the processed messages  is very important for achieving glitch freedom. That is why we can conclude that Java Message Service is not suitable for implementing reactive applications in distributed setting.
+As mentioned before, JMS takes advantage of a message queue, but it has different properties than the traditional one. An ordinary queue would take care that all messages from the queue are recieved at the consumers in the same order in which they entered the queue. At the same time, a JMS queue only assures that a message is processed exactly once. That feature of JMS has a significant drawback in the application of reactive programming, because the order of the processed messages  is very important for achieving glitch freedom. That is why we can conclude that Java Message Service is not suitable for implementing reactive applications in distributed setting \cite{jms} \cite{jmsd}.
 
 \subsubsection{AmbientTalk/R}
 Carreton et al. \cite{loosely} base their algorithm on a publish/subscribe architecture. The system is implemented in the reactive AmbientTalk/R. It handles reactive value changes using the standard dependency graph stratification approach - the interpreter constructs a dataflow graph from the variables. Then, the updates to the values are scheduled in a single event loop, which suffices to avoid glitches in the local setting. 
@@ -649,6 +649,9 @@ This paper has been written for the Seminar Implementation of Modern Programming
 
 \bibitem{rescala}{\url{http://www.guidosalvaneschi.com/rescala/main/index.html}}
 
+\bibitem{jms}{\url{http://en.wikipedia.org/wiki/Java_Message_Service}}
+
+\bibitem{jmsd}{\url{http://docs.oracle.com/javaee/6/tutorial/doc/bncdq.html}}
 
 \end{thebibliography}
 
