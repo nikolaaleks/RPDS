@@ -99,20 +99,20 @@ Technology has become a part of our everyday life due to the many improvements i
 
 Despite their many advantages, distributed systems also pose some challenges to developers, the most important of which being the correct synchronization between distributed nodes. Exchanging messages from one host to another and upholding different consistency guarantees in particular become much more difficult with the introduction of distribution. Moreover, the task of handling the communication efficiently in a decentralized and potentially dynamic network calls for a revision of the existing paradigms. 
 
-Several solutions have been proposed in order to establish a mechanism that deals with the communication reliably, allowing the establishment and adherence to guarantees regarding the way the messages are passed. We will discuss and compare some of them in terms of their possible applications in dynamic distributed applications. The focus will be on the ways of achieving reactivity of a program. In the current paper we will examine several reactive suggestions and the manner in which they can address the challenges of distributed computing.
+Various solutions have been proposed in order to establish a mechanism that deals with the communication in a way that allows the establishment and adherence to guarantees regarding the way messages are passed. In the current paper we will discuss and compare some of them in terms of their possible usage in distributed applications. The focus will be on the ways of achieving reactivity of a program and reactive programming in particular.
 
 This paper makes the following contributions:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-  \item It describes a common organization of a distributed system, such as the publish/subscribe 
-  \item It summarizes the main approaches for developing reactive applications in a distributed setting
-  \item It outlines the challenges of the development of distributed applications
+  \item It summarizes the main approaches for developing reactive applications, such as the Observer pattern, events and callbacks and data bindings
+  \item It describes a common organization of a distributed system, such as the publish/subscribe and provides more specific details of the implementation of JMS
   \item It introduces the main concepts of reactive programming
+  \item It outlines the challenges of the development of distributed applications
   \item Represents a structured analysis of the latest and most exhaustive research papers in the sphere of distributed reactive applications
   \item It argues that reactive programming can be leveraged to address the needs of distributed applications.
 \end{itemize}
 
-The rest of the paper is structured as follows: Section 2 summarizes the traditional approaches for ensuring the reactivity of a program. It also describes the organization of general publish/subscribe systems such as JMS. Section 3 introduces the basics of reactive programming as an alternative to these approaches. It also presents the algorithms that will be later compared in terms of the solutions they propose to the common challenges of distributed reactive programming. Section 4 discusses common problems - propagation of changes in reactive applications, ensuring glitch-freedom and handling dynamic network topologies. In Section 5 we give some overview of Related Work. Section 6 concludes the paper, giving a summary of the present study.
+The rest of the paper is structured as follows: Section 2 summarizes the traditional approaches for ensuring the reactivity of a program. It also describes the organization of publish/subscribe systems and JMS. Section 3 introduces the basics of reactive programming as an alternative to these approaches. It also presents the algorithms that will be later compared in terms of the solutions they propose to the common challenges of distributed reactive programming. Section 4 discusses common problems - propagation of changes in reactive applications, ensuring glitch-freedom and handling dynamic network topologies. In Section 5 we give some overview of Related Work. Section 6 concludes the paper, giving a summary of the present study.
 
 \section{Traditional Ways of Ensuring Reactivity}
 
@@ -573,9 +573,9 @@ As already described, AmbientTalk/R is a reactive programming solution for Java.
 Most if not all of these libraries include consistent change propagation using  stratification of the dependency graph in the local setting. However, some of the frameworks are not suitable for use in a distributed environment (e.g. because the language they target cannot be used both on the server and the client), or do not provide any glitch guarantees in that case. 
 
 \section{Conclusions}
-In this paper we have shown that reactive applications can be very useful in distributed programming. First, we have started our work by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization. Second, we have introduced the reactive programming paradigm and its most important concept.
+In this paper we have shown that reactive applications can be very useful in distributed programming. First, we have started our work by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization and the specifics of JMS. Second, we have introduced the reactive programming paradigm and its most important concepts.
 
-After we have gathered enough basis knowledge for reactive programming in a distributed setting we compared existing approaches, such as Scala.React, Scala.Rx, ELM, SID-UP, AmbientTalk/R and DREAM. The criteria that we have chosen when conducting the comparison between the different algorithms were the way the systems ensure glitch freedom and achieving satisfying reactivity in the context of joining and leaving hosts. Our study finds Distributed Reactive Programming Middleware (DREAM) and Source Identifier Update Propagation Algorithm (SID-UP) to be the most  thorough and complete papers, shaping out the future path of reactive distributed programming.
+After we have gathered enough basis knowledge for reactive programming we compared existing approaches, such as Scala.React, Scala.Rx, ELM, SID-UP, AmbientTalk/R and DREAM. The criteria that we have chosen when conducting the comparison between the different algorithms were the way the systems ensure propagation guarantees and achieving satisfying reactivity in the context of joining and leaving hosts. Our study finds Distributed Reactive Programming Middleware (DREAM) and Source Identifier Update Propagation Algorithm (SID-UP) to be the most thorough and complete papers, shaping out the future path of reactive distributed programming.
 
 %\appendix
 %\section{Appendix Title}
