@@ -281,7 +281,7 @@ numbers=left, numbersep=5pt]
 
 \end{lstlisting}
 
- This is so because it can be applied in a  A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to  Eugster and Kermarrec \cite{pubsub4} the event broker known also as event service is responsible for:
+ This is so because it can be applied in a  A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to  Eugster et al. \cite{pubsub4} the event broker known also as event service is responsible for:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{space decoupling} - different participants do not know of each other, but communication between them is possible
@@ -465,7 +465,7 @@ Each of the presented solutions addresses the common problems of developing reac
 As Scala.React and Scala.Rx count on topological sorting of the nodes, there must be a centralized coordinator that keeps track of the whole network and manages the communication. In a distributed setting, such a solution is not very practical, as it yields unbounded one-to-many communication. This would not only increase the network traffic, but also render impossible any attempts on performing the computations in parallel. Therefore, in its pure form it is not applicable in a distributed environment.
 
 \subsubsection{Publish/Subscribe Systems}
-The authors of \cite{totalorder} propose a different classification of change propagation guarantees. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
+Zhang et al. \cite{totalorder} propose a different classification of change propagation guarantees. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{Per-Publisher Total Order}: For any two messages m and m' and any two processes p and q, where {p, q} $\in$ Dest(m) $\cap$ Dest(m'). If sender(m) = sender(m'), then p delivers m before m' if and only if q delivers m before m'.
