@@ -108,7 +108,7 @@ This paper makes the following contributions:
   \item It describes a common organization of a distributed system, such as the publish/subscribe and provides more specific details of the implementation of JMS
   \item It introduces the main concepts of reactive programming
   \item It outlines the challenges of the development of distributed applications
-  \item Represents a structured analysis of the latest and most exhaustive research papers in the sphere of distributed reactive applications
+  \item It represents a structured analysis of the latest and most exhaustive research papers in the sphere of distributed reactive applications
   \item It argues that reactive programming can be leveraged to address the needs of distributed applications.
 \end{itemize}
 
@@ -126,9 +126,11 @@ The term “reactive” stands for responsive, resilient, elastic message-driven
 \caption{Observer Pattern}
 \end{figure}
 
-The Observer pattern \cite{ojpg} is commonly used to implement distributed event handling. However, the pattern is also highly criticized due to the overhead it creates in terms of boilerplate code that has to be added to the application. Its implementation also involves pollution of the interface of the classes because of the methods added in order to handle the message passing. In addition, it causes inversion of control and can potentially cause memory leaks. The Observer pattern is briefly described by the UML diagram in Figure 1.
+The Observer pattern \cite{ojpg}, briefly described by the UML diagram in Figure 1, is commonly used to implement distributed event handling. However, the pattern is generally criticized due to the overhead it creates in terms of boilerplate code that has to be added to the application in order to handle the message passing. Its implementation also involves pollution of the API of the classes because of the methods added for registering and unregistering observers and notifying them about the changes. In addition, the pattern causes inversion of control, which hinders the readability of the program and the static reasoning about its behavior.
 
 Listing 1 shows an example implementation in Scala that implements the following scenario: let us assume that we have three different variables  \textit{a}, \textit{b}, \textit{c} and we want to define a constraint on \textit{c} to be equal to the sum of the other two variables \textit{a} and \textit{b} at all times.
+
+\bigskip
 
 \begin{lstlisting}[frame=single,caption=Observer Pattern in Scala, captionpos=b,linewidth=\columnwidth, language=java, basicstyle=\small, morekeywords={def,val,var,object, trait}, keywordstyle=\color{blue},
 numbers=left, numbersep=5pt] 
@@ -175,26 +177,28 @@ object Observering {
 
 \end{lstlisting}
 
-As can be seen from the code, there is a lot of code dealing with the wiring and communication explicitly, thus making the code of the program less readable. Furthermore, in this implementation the changes to the variables are treated in a way that does not let the variable \textit{c} determine which of the two source variables caused the change. In addition, if we have a more complicated program, the code for the updating of \textit{c} will be mixed in with the implementation of the business logic of the application. The implementation of the notification logic also normally adds methods for registering and unregistering observers, which pollute the API of the classes.
+As can be seen in the listing, there is a lot of code dealing with the wiring and communication explicitly, thus making the code of the program less readable. Furthermore, in this implementation the changes to the variables are treated in a way that does not let the variable \textit{c} determine which of the two source variables caused the change. In addition, if we have a more complicated program, the code for the updating of \textit{c} will be mixed in with the implementation of the business logic of the application. 
 
 \subsection{Events, Callbacks and Data Binding}
 
-The most popular alternatives to the Observer pattern in recent years are events and callbacks. 
-Events are easier to use in comparison to implementing the Observer pattern, but also have a couple of drawbacks. For example, in the case of multiple handlers of the same event (which is often the case), all subscribers have to listen for the same event. When the subscribers want to implement the same logic at the occurrence of the event, the code that does the specific goal has to be duplicated on every client and can be considered a violation of the DRY \textit{(Don't repeat yourself)} principle. We will see later in the paper how reactive programming avoids this problem.
+A popular alternatives to the Observer pattern in recent years are events and callbacks. 
+Events are easier to use in comparison to implementing the Observer pattern, but also have a couple of drawbacks. For example, in the case of multiple handlers of the same event (which is often the case), all subscribers have to listen for the same event. When the subscribers want to implement the same logic at the occurrence of the event, the code that does the specific goal has to be duplicated on every client and can be considered a violation of the DRY \textit{(Don't repeat yourself)} principle. We will see later in the paper how reactive programming avoids this problem using reactives.
 
-Furthermore, there is no way to determine in what order the event handlers will be executed and to determine statically the control flow of the application.
+Another setback of events is that there is no way to determine in what order the event handlers will be executed and to determine statically the control flow of the application.
 
-The same statement holds true for callbacks - every subscriber would have to contact the host emitting the messages and pass a reference to the callback function. Callbacks also hinder the static reasoning about the behavior of a program because of the inversion of control.
+The same statement holds true for callbacks - every subscriber would have to contact the host emitting the messages and pass a reference to the callback function. Callbacks also hinder the reasoning about the behavior of a program because of the inversion of control.
 
 Microsoft's .NET framework \cite{net} offers an interesting and quite useful approach for propagating data changes in the back-end of the program, in the UI, or between the back-end computations and the UI \cite{dp}. They introduce a special type of properties called ``dependency properties'', which can be defined on objects inheriting from DependencyObject. Basically, if you want to track automatically the changes of a property, a common approach would be to implement it as a DependencyProperty of a specific DependencyObject. 
 
 Each dependency property has to be specially registered using a factory method, so that the framework knows to treat it differently. When this method is invoked, it is passed the following parameters: name of the property, its type, its owner class, default value and a callback that is to be executed when the value of the property changes. Listing 2 shows an implementation of the \textit{\textbf{c = a + b}} example using dependency properties in the C\# programming language. As can be seen in the code listing, we have an object DependencyObjectSum with dependency properties \textit{AProperty},\textit{ BProperty} and \textit{CProperty}, wrapping regular properties \textit{A}, \textit{B} and \textit{C}. When the values of \textit{A} and \textit{B} change, a callback is fired to reevaluate \textit{C}. 
 
-The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties also enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls, which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Listing 3. 
+The approach is also widely used with Microsoft's frameworks Windows Presentation Foundation (WPF) and Silvelright. Dependency objects and properties enable data-binding between controls in the UI and the values in the back-end. For example, we can easily define a page with TextBox controls which show the values of the \textit{A}, \textit{B} and \textit{C} properties of a DependencyObjectSum object. When the user changes the text in the text boxes which have their Text property data bound to \textit{A} and \textit{B}, the value in the other text box will be automatically reevaluated and changed to the new sum. The code that does that can be seen in Listing 3. 
 
 However, this approach has a couple of setbacks. First, it requires a lot of boilerplate code even in this simple scenario. Second, the wiring requires typing the name of the property as a string, not making use of static type-checking. Thus, a small typo can take hours to debug. Last, dependency objects and properties usually cause a lot of memory consumption overhead, can lead to performance issues and even memory leaks when not handled carefully.
 
-\begin{lstlisting}[frame=single, caption={DependencyObjectSum.cs. In that file are defined three dependency properties, where C changes every time when new values are assigned to A or B} ,captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={readonly, set, get, typeof}, keywordstyle=\color{blue}, numbers=left, numbersep=5pt]
+\bigskip
+
+\begin{lstlisting}[frame=single, caption={DependencyObjectSum.cs. The class defines three dependency properties - A, B and C. C changes every time when new values are assigned to A or B.} ,captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={readonly, set, get, typeof}, keywordstyle=\color{blue}, numbers=left, numbersep=5pt]
  public class DependencyObjectSum : 
 		DependencyObject {
   public int A {
@@ -281,7 +285,7 @@ numbers=left, numbersep=5pt]
 
 \end{lstlisting}
 
- This is so because it can be applied in a  A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to  Eugster and Kermarrec \cite{pubsub4} the event broker known also as event service is responsible for:
+A pub/sub system consists of publishers, subscribers, and a message mediator in between called event service or event brokers. The task of those brokers is to take care of the network that connects publishers and subscribers and to assure that the messages exchanged are going to reach their destination with satisfying performance \cite{pubsub1}. According to Eugster and Kermarrec \cite{pubsub4} the event broker known also as event service is responsible for:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{space decoupling} - different participants do not know of each other, but communication between them is possible
@@ -293,19 +297,19 @@ Publishers and subscribers are only responsible for generating and consuming eve
 
 Publishers create information events and put them into the system, while subscribers wait for specific events and consume the generated information. Pub/sub based systems achieve loose coupling because publishers and subscribers do not know anything about each other and the only thing that connects them are the subscriptions and advertisements exchanged in the system.
 
-There are two main types of pub/sub systems - \textbf{subject-}, \textbf{topic-} and \textbf{content based}. The first type defines different subjects or topics. All of the subscribers registered for a topic receive all of the events for that subject, although not all of them might be interested in everything generated for the same topic. That is why another kind of pub/sub systems was introduced - the so-called content-based type. It is considered to be more flexible because subscribers can filter the events generated for a topic based on the content of the message, and handle only those that they are really interested in. Some of the advantages of content-based over topic-based is that it is required to define less subjects and also has less overhead in maintenance \cite{pubsuburl}.
+There are two main types of pub/sub systems - \textbf{subject-} or \textbf{topic-based} and \textbf{content based}. The first type defines different subjects or topics. All of the subscribers registered for a topic receive all of the events for that subject, although not all of them might be interested in everything generated for the same topic. That is why another kind of pub/sub systems was introduced - the so-called content-based type. It is considered to be more flexible because subscribers can filter the events generated for a topic based on the content of the message, and handle only those that they are really interested in. Some of the advantages of content-based over topic-based is that it requires the definition of fewer subjects and has less overhead in maintenance \cite{pubsuburl}.
 
 On the other hand implementing content-based publish-subscribe system is not a trivial task. Efficiently matching an event when there are multiple number of subscribers and only one event broker, or efficiently multicasting events when there are many brokers, seems to be an arduous problem especially when the system is geographically distributed and scalability is required. Banavar et al. \cite{pubsub1} contribute by providing a link-matching algorithm that can be used for content-based pub/sub systems to solve the problems mentioned.
 
 Fiege et al. \cite{pubsub2}, Cugola et al. \cite{pubsub3} and Souto et al. \cite{pubsub5} present pub/sub based middleware that has been successfully used in a distributed environment consisting of mobile and wireless devices. Requirements and limitations of such networks are first introduced and then suggestions are given how pub/sub based middleware can help in solving related problems.
 
-Publish/subscribe systems have found an application in mobile sensor networks. They cover the requirement that many participants can generate or consume information, and all nodes in the network should be able to reach the rest. However, in contrast to traditional publish-subscribe systems where nodes are statically situated, mobile devices can change location often and introduce a new topology of the network. Therefore new publish-subscribe based middleware has to be implemented for the scenario where mobile and wireless sensors are used that deals with the typical problems of mobile networks with roaming nodes.
+Publish/subscribe systems can also be adopted in mobile sensor networks. They cover the requirement that many participants can generate or consume information, and all nodes in the network should be able to reach the rest. However, in contrast to traditional publish/subscribe systems where nodes are statically situated, mobile devices can change location often and introduce a new topology of the network. Therefore new publish/subscribe based middleware that deals with the typical problems of mobile networks with roaming nodes has to be implemented for the scenario where mobile and wireless sensors are used.
 
-According to the authors of the papers above, middleware based on publish-subscribe paradigm is an appropriate approach for implementing distributed mobile and wireless sensor network system because it provides flexibility, scalability and good performance. However:
+According to the authors of the mentioned papers, middleware based on the publish/subscribe paradigm is an appropriate approach for implementing distributed mobile and wireless sensor network systems because it provides flexibility, scalability and good performance. However:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-  \item Its implementation usually relies on a variant of the Observer pattern, thus involving inversion of control flow.
-  \item A way to deal with roaming publishers/subscribers has to be devised and implemented.
+  \item Its implementation usually relies on a variant of the Observer pattern, thus involving inversion of control flow
+  \item A way to deal with roaming publishers/subscribers has to be devised and implemented
   \item Push based communication from the server to the clients may yield unbounded one-to-many communication.
 \end{itemize}
 We will now look more closely into a particular publish/subscribe message service - \textbf{JMS}.
@@ -313,11 +317,11 @@ We will now look more closely into a particular publish/subscribe message servic
 \section*{Java Message Service}
 
 \smallskip
-JMS that stands for Java Message Service is a messaging standard used in Java EE platform for creating, sending, receiving and reading information messages between different client programs. This technology is applicable in a distributed environment and offers loose coupling, reliability and asynchronous communication.
+Java Message Service (JMS) is a messaging standard used in Java EE platform for creating, sending, receiving and reading information messages between different client programs \cite{jms} \cite{jmsd}. This technology is applicable in a distributed environment and offers loose coupling, reliability and asynchronous communication.
 
-Before giving detailed information about JMS let us first briefly introduce the general idea of messaging that is used today. Current distributed systems consist of numerous end hosts where different client applications establish connections and communicate with each other. In order to achieve reliable communication and satisfying speed with very short delay, stable infrastructure has to be built for such an environment.
+Before giving detailed information about JMS let us first briefly introduce the general idea of messaging that is used today. Current distributed systems consist of numerous end hosts where different client applications establish connections and communicate with each other. In order to achieve reliable communication and satisfying speed with very short delay, a stable infrastructure has to be built for such an environment.
 
-The messaging concept is the technology that offers exchange of information between multiple, potentially different software components and applications, by preserving the already mentioned requirements. It offers an intermediate agent that handles the distribution of messages and takes care that they reach their destination. The main idea is to build an infrastructure, where different software programs can communicate with each other, without explicitly knowing much about each other. What matters is that when a message is generated from a client, it is sent to other clients that are interested. If the data format of the message is unknown for some of the clients, the intermediate agent takes care of the translation and maintenance of the environment, so that all client applications can understand each other.
+The messaging concept is the technology that offers exchange of information between multiple, potentially different software components and applications, by preserving the already mentioned requirements. It offers an intermediate agent that handles the distribution of messages and takes care that they reach their destination. The main idea is to build an infrastructure where different software programs can communicate with each other, without explicitly knowing much about one another. What matters is that when a message is generated from a client, it is sent to the other clients that are interested. If the data format of the message is unknown for some of the clients, the intermediate agent takes care of the translation and maintenance of the environment, so that all client applications can understand the message.
 
 As mentioned before, JMS API is an important component from the Java Enterprise Edition platform and was built for solving communication problems between different technologies that are also part of Java EE.
 	
@@ -328,7 +332,7 @@ Every JMS application consists of the following parts:
 \item \textbf{JMS provider} - a Java implementation of message oriented middleware that offers features for administration and control
 \item \textbf{JMS client} - an application written in Java that can produce and consume messages. Clients are divided into two categories: \textbf{JMS publisher/producer} and \textbf{JMS subscriber/consumer} depending on the action that they perform. It is also possible that a client can be both a producer and a consumer in the same distributed environment.
 \item \textbf{JMS message} - wraps the object that is used for transferring the information between different JMS clients.
-\item \textbf{JMS queue} - a mechanism that assures that every consumer will receive the message no matter if it is interested or not. JMS queue is different from the normal queue that assures delivering of items at the same order as they entered the queue. JMS queue takes care that the consumer receives the message only once, but does not provide any guarantees as to the order in which the messages will be consumed by the subscribers.
+\item \textbf{JMS queue} - a mechanism that assures that every consumer will receive the message no matter if it is interested or not. JMS queue is different from the normal queue that assures delivering of items in the same order in which they entered the queue. JMS queue takes care that the consumer receives the message only once, but does not provide any guarantees as to the order in which the messages will be consumed by the subscribers.
 \item \textbf{JMS topic} - a way to distinguish between different messages. Consumers register for specific topics and  filtering is performed to ensure that only interested subscribers will be notified of a published message.
 
 \end{itemize}
@@ -336,25 +340,26 @@ Every JMS application consists of the following parts:
 Another important feature of JMS is the programming model. There are two different implementations:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-\item \textbf{Point-to-point} - This programming model consists of a message sender, a consumer and a queue that connects them. For every consumer there is one message queue that assures that the message will be delivered. Every message stays in the queue until a consumer receives it and sends an acknowledgment for it or it expires. It is not required that both the producer and the consumer should be online upon sending or consuming the message. If there is no registered consumer for a message queue, all messages remain inside the queue until a consumer asks for them. Advantage of this programming model is that messages are always delivered to consumers and no data is lost. On the other hand in some applications consumers might not be interested in all type of messages, that is why another programming model is used where consumers can subscribe for specific messages – publish/subscribe.
-\item \textbf{Publish/subscribe} - JMS implements all features for publish/subscribe model that has already been discussed earlier in the paper. It is worth mentioning that in addition, the JMS API offers the use of durable subscriptions – messages are sent even when the subscribers are not active.
+\item \textbf{Point-to-point} - This programming model consists of a message sender, a consumer and a queue that connects them. For every consumer there is one message queue that assures that the message will be delivered. Every message stays in the queue until a consumer receives it and sends an acknowledgment for it or it expires. It is not required that both the producer and the consumer should be online upon sending or consuming the message. If there is no registered consumer for a message queue, all messages remain inside the queue until a consumer asks for them. Advantage of this programming model is that messages are always delivered to consumers and no data is lost. On the other hand in some applications consumers might not be interested in all type of messages, that is why another programming model is used where consumers can subscribe for specific messages -- publish/subscribe.
+\item \textbf{Publish/subscribe} - JMS implements all features of the publish/subscribe model discussed earlier in the paper. It is worth mentioning that in addition, the JMS API offers the use of durable subscriptions – messages are sent even when the subscribers are not active.
 
 \end{itemize}
 
-When a message is either sent or received, it is very important for JMS API to distinguish between two message consumptions:
+Upon sending and receiving messages, JMS API distinguishes between two types of message consumption:
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
-\item \textbf{Synchronous} - when receive method is called, the execution thread of the consumer is blocked until the message is received or it times out.
-\item \textbf{Asynchronous} - the client can register a message listener with a consumer. When a message reaches its destination, that listener calls the specific method that handles the message. In this way the execution thread is not blocked and the consumer can perform other tasks, while still reading the message.
+\item \textbf{Synchronous} - when the receive method is called, the execution thread of the consumer is blocked until the message is received or it times out.
+\item \textbf{Asynchronous} - the client can register a message listener with a consumer. When a message reaches its destination, that listener calls the specific method that handles the message. In this way the execution thread is not blocked and the consumer can perform other tasks while still reading the message.
 
 \end{itemize}
 
-We are not going into technical details how JMS is used for building applications, as that falls outside of the scope of this paper. We refer to JMS API as another solution for communication between numerous end hosts in the same distributed environment.
+We are not going into technical details how JMS is used for building applications, as that falls outside of the scope of this paper. We refer to JMS API as another solution for communication between end hosts in the same distributed environment.
 
 \section{Reactive Programming}
 
 Reactive programming aims to render problems of communicating information between nodes obsolete by introducing a new concept of message propagation. It offers immediate change of defined variables during the execution of the program without explicit need for reassignment of the new value.
 
-Let us refer to the example used in Section 2.2 in order to illustrate one significant feature of reactive programming. We have defined variables \textit{a}, \textit{b} and \textit{c}, where \textit{c}  is dependent on two others variables --  \textit{a} and \textit{b}. If \textit{a} and \textit{b} receive new values, but \textit{c} is reevaluated only with the new value of \textit{a} and with the old value of \textit{b}, or in other words a partial update for \textit{c} has occurred, resulting in a meaningless value of the variable \textit{c}. Variable \textit{c} should reevaluate only after both \textit{a} and \textit{b} have their new values.
+Let us refer to the example used in Section 2.2 in order to illustrate one significant feature of reactive programming. We have defined variables \textit{a}, \textit{b} and \textit{c}, where \textit{c}  is dependent on the other two variables. If \textit{a} and \textit{b} receive new values, but \textit{c} is reevaluated only with the new value of \textit{a} and with the old value of \textit{b}, we say that a \textbf{partial update} of \textit{c} has occurred. This would result in a meaningless value of the variable \textit{c}, which should reevaluate only after both \textit{a} and \textit{b} have their new values. The term that is used to denote such invalid states of a variable or state of the program is \textbf{glitch}.
+
 In REScala the example from above could be implemented as in Listing 4.
 
 \begin{lstlisting}[frame=single,caption={Reactive Sum},captionpos=b,linewidth=\columnwidth, basicstyle=\small, language=java, morekeywords={val, Signal}, keywordstyle=\color{blue}]
@@ -363,12 +368,12 @@ In REScala the example from above could be implemented as in Listing 4.
 	val c = Signal { a() + b() }
 \end{lstlisting}
 
-The types used in the example are built-in the REScala framework and are used to define reactive values.
+The types used in the example are built-in in the REScala framework and are used to define reactive values.
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{Vars} are used to represent atomic types, such as int, string, etc., and can be used in reactive expressions (signals).
   \item \textbf{Signals} are declared as a constraint expression and their values can change automatically over time when other variables in the expression change. That is why sometimes in the literature signals are also referred to as \textbf{Behaviors}. It is possible for a signal to depend on another signal. 
-  \item \textbf{Reactives} - a common term for vars and signals to describe the concept of time-changing values, that are introduced in "Towards Reactive Programming for Object-Oriented Applications" \cite{towards} . When the respective observable and reactive variables that participate in the same reactive expression are spread across different hosts we refer to them as \textbf{remote reactives}.
+  \item \textbf{Reactives} - a common term for vars and signals that describe the concept of time-changing values, as introduced in "Towards Reactive Programming for Object-Oriented Applications" \cite{towards}. When the respective observable and reactive variables that participate in the same reactive expression are spread across different hosts we refer to them as \textbf{remote reactives}.
 
 \end{itemize}
 
@@ -382,11 +387,11 @@ The data flow concerns the passage of information in the form of data and messag
 \caption{Dependency Graph}
 \end{figure}
 
-This \textbf{Dependency Graph} is formally defined as a directed graph \textit{D = \{V, E\}}, where \textit{V} are all variables V = $v_{1}$,$ v_{2}$, ... , $v_{n}$  are  defined in a component of a reactive program, and \textit{E} represents all the edges in the graph. There is an edge $e_{ij}$ from variable $v_{ i}$ to variable $v_{j}$ , if  $v_{j}$ is a reactive variable defined through an expression in which $v_{i}$ participates.  We also say that a variable $v_{c}$ is dependent on a variables $v_{a}$ or $v_{b}$ if there are paths from $v_{a}$ or $v_{b}$ to $v_{c}$ \cite{dream}.
+A \textbf{Dependency Graph} is formally defined as a directed graph \textit{D = \{V, E\}}, where \textit{V} are all variables V = $v_{1}$,$ v_{2}$, ... , $v_{n}$  defined in a component of a reactive program, and \textit{E} represents all the edges in the graph. There is an edge $e_{ij}$ from variable $v_{ i}$ to variable $v_{j}$ , if  $v_{j}$ is a reactive variable defined through an expression in which $v_{i}$ participates.  We also say that a variable $v_{c}$ is dependent on a variables $v_{a}$ or $v_{b}$ if there are paths from $v_{a}$ or $v_{b}$ to $v_{c}$ \cite{dream}.
 
 In general, the lifecycle of reactive applications is described in terms of update turns.  An \textbf{update turn} starts when a change occurs inside the reactive network of an application and this change has to be passed on to the dependent variables and cause their revaluation. These update turns can be split into the following phases: \textbf{admission phase} and \textbf{propagation phase}. The admission phase is the first one and it is characterized by the fact that new values for some input nodes are assigned. After that the propagation phase starts, during which the new values of the changed nodes are made visible to the variables that use them. Only the nodes that are transitively reachable from the source nodes have to participate in the propagation phase, because only dependent reactive values have the potential to be updated \cite{sidup}. Different solutions have been proposed in order to ensure that the changes will be correctly propagated in the dependency graph with different consistency guarantees.
 
-The main issues with the propagation of changes is determining a way in which all dependent nodes are evaluated with least amount of messages passed and without obtaining spurious values. Such inconsistencies may be obtained as a result of a partial update for example -- when the value of a variable is overwritten without taking into account the new values of all the variables it depends on. The term that is used to denote such invalid states of a variable or state of the programs is \textbf{glitches}.
+The main issues with the propagation of changes is determining a way in which all dependent nodes are evaluated with least amount of messages passed and without obtaining spurious values. Such inconsistencies may be obtained as a result of a partial update for example -- when the value of a variable is overwritten without taking into account the new values of all the variables it depends on. 
 
 In a local setting, glitches can be avoided by topologically sorting the variables and updating them in levels. In this way, a variable is only updated after all its dependent variables have changed their values. In our example the variables \textit{a} and \textit{b} can be considered at level 0, while \textit{c} is at level 1. Therefore, \textit{a} and \textit{b} can be potentially evaluated and update at the same time and the evaluation of \textit{c} can occur only after that. In that way \textbf{glitch freedom} can be achieved.
 
@@ -397,7 +402,7 @@ Another thing that reactive applications usually consider is \textbf{dynamic dep
 
 For instance, if we have \textit{z = if c then x else y, z} will always depend on the value of \textit{c}. However, depending whether \textit{c = true} or \textit{c = false, z} will need to be evaluated either when \textit{x} changes or when \textit{y} changes. We say that \textit{z} has a dynamic dependency on \textit{x and y}.
 
-\item\textbf{Higher Order Reactives} -– These are reactive values that depend on other reactive values. That feature is very important in a distributed setting, because it allows dynamic dependencies. In a distributed environment where hosts can connect and disconnect at any time, higher order reactives are needed to ensure the proper functioning of the system \cite{sidup}.
+\item\textbf{Higher Order Reactives} -– These are reactive values that depend on other reactive values. This feature is very important in a distributed setting, because it allows dynamic dependencies. In a distributed environment where hosts can connect and disconnect at any time, higher order reactives are needed to ensure the proper functioning of the system \cite{sidup}.
 
 \end{itemize}
 
@@ -415,7 +420,7 @@ Scala.React and Scala.Rx are two libraries built on top of Scala that address th
 Neither of the two libraries however has been used in a distributed setting upholding change propagation guarantees. We will later look into a distributed update algorithm for REScala that manages to do that.
 
 \subsubsection{ELM}
-The ELM algorithm proposed in \cite{elm} suggests an algorithm for propagating value changes in a local setting. The authors suggest a network organization which includes a central coordinator. This component's job is to broadcast every update turn's start to all input nodes. Every node then sends a “change” or “no change” pulse depending on whether it has been changed or not in this update turn. When a node receives signals from all nodes that it has a dependency on in the current turn, it reevaluates its value and sends a signal itself. The evaluation finishes when all nodes send a signal with their state.
+The ELM algorithm proposed in \cite{elm} suggests an algorithm for propagating value changes in a local setting. The authors suggest a network organization which includes a central coordinator. This component's job is to broadcast every update turn's start to all input nodes. Every node then sends a ``change'' or ``no change'' pulse depending on whether it has been changed or not in this update turn. When a node receives signals from all nodes that it has a dependency on in the current turn, it reevaluates its value and sends a signal itself. The evaluation finishes when all nodes send a signal with their state.
 
 The algorithm supports pipelining, i.e. the pulses can be propagated in wave fronts, thus enhancing parallelism in the propagation phase, from which distributed settings can benefit.
 
@@ -446,7 +451,7 @@ SID-UP also considers two phases of the change propagation of a value. In the ad
 
 Furthermore, each pulse carries information about all sources changes during the current update turn. This allows only nodes reachable from the changed sources and the edges between them to be involved in the transmitting and waiting for pulses in the propagation phase.
 
-Once the propagation phase starts, the nodes that can be potentially updated wait for pending nodes, on which they depend. After all dependencies have been evaluated, the current node updates its value and sends a pulse further on. The nodes also keep a local mirror copy of the nodes, on which they depend. When the original node changes, it pushes the change to the mirror node, from where the dependent node extracts the changed value in a pull-based manner.
+Once the propagation phase starts, the nodes that can be potentially updated wait for pending nodes, on which they depend. After all dependencies have been evaluated, the current node updates its value and sends a pulse further on. The nodes also keep a local mirror copy of the nodes on which they depend. When the original node changes, it pushes the change to the mirror node, from where the dependent node extracts the changed value in a pull-based manner.
 
 This organization allows all dependent nodes to execute on different threads and be governed only by the pulses they receive.
 
@@ -465,7 +470,7 @@ Each of the presented solutions addresses the common problems of developing reac
 As Scala.React and Scala.Rx count on topological sorting of the nodes, there must be a centralized coordinator that keeps track of the whole network and manages the communication. In a distributed setting, such a solution is not very practical, as it yields unbounded one-to-many communication. This would not only increase the network traffic, but also render impossible any attempts on performing the computations in parallel. Therefore, in its pure form it is not applicable in a distributed environment.
 
 \subsubsection{Publish/Subscribe Systems}
-The authors of \cite{totalorder} propose a different classification of change propagation guarantees. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
+Zhang et al. \cite{totalorder} propose a different classification of change propagation guarantees. Provided that Dest(m) is the set of subscribers that message m should be delivered to, the following types of total orders are defined:
 
 \begin{itemize} \itemsep1pt \parskip0pt \parsep0pt
   \item \textbf{Per-Publisher Total Order}: For any two messages m and m' and any two processes p and q, where {p, q} $\in$ Dest(m) $\cap$ Dest(m'). If sender(m) = sender(m'), then p delivers m before m' if and only if q delivers m before m'.
@@ -488,7 +493,7 @@ The conflict resolution relies on the transmission of acknowledgments. Each publ
 
 \subsection*{Java Message Service}
 
-As mentioned before, JMS takes advantage of a message queue, but it has different properties than the traditional one. An ordinary queue would take care that all messages from the queue are recieved at the consumers in the same order in which they entered the queue. At the same time, a JMS queue only assures that a message is processed exactly once. That feature of JMS has a significant drawback in the application of reactive programming, because the order of the processed messages  is very important for achieving glitch freedom. That is why we can conclude that Java Message Service is not suitable for implementing reactive applications in distributed setting.
+As mentioned before, JMS takes advantage of a message queue, but it has different properties than the traditional one. An ordinary queue would take care that all messages from the queue are received at the consumers in the same order in which they entered the queue. However, a JMS queue only assures that a message is processed exactly once. This characteristic of JMS presents a significant drawback, because it does not allow the establishment of guarantees in the order of the processed messages and respectively achieving glitch freedom. That is why we can conclude that Java Message Service is not suitable for implementing reactive applications in a distributed setting \cite{jms} \cite{jmsd}.
 
 \subsubsection{AmbientTalk/R}
 Carreton et al. \cite{loosely} base their algorithm on a publish/subscribe architecture. The system is implemented in the reactive AmbientTalk/R. It handles reactive value changes using the standard dependency graph stratification approach - the interpreter constructs a dataflow graph from the variables. Then, the updates to the values are scheduled in a single event loop, which suffices to avoid glitches in the local setting. 
@@ -531,7 +536,7 @@ In addition, SID-UP requires passing messages only from nodes actively involved 
 The different authors suggest different approaches for handling dynamic network topologies.
 
 \subsubsection{Pub/Sub}
-The Publish/Subscribe paradigm is developed specifically to implement loose coupling between message providers and consumers. Therefore, it provides good support for dynamic network topology. The authors Zhang et al. \cite{totalorder} specify two reliability guarantees:
+The Publish/Subscribe paradigm is developed specifically to implement loose coupling between message providers and consumers. Therefore, it provides good support for dynamic network topology. Zhang et al. \cite{totalorder} specify two reliability guarantees:
 
 \begin{enumerate}
   \item \textbf{Liveness}: If a message m is sent by a process p to its destination group Dest(m), then all processes in Dest(m) will eventually deliver m.
@@ -573,9 +578,9 @@ As already described, AmbientTalk/R is a reactive programming solution for Java.
 Most if not all of these libraries include consistent change propagation using  stratification of the dependency graph in the local setting. However, some of the frameworks are not suitable for use in a distributed environment (e.g. because the language they target cannot be used both on the server and the client), or do not provide any glitch guarantees in that case. 
 
 \section{Conclusions}
-In this paper we have shown that reactive applications can be very useful in distributed programming. First, we have started our work by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization and the specifics of JMS. Second, we have introduced the reactive programming paradigm and its most important concepts.
+In this paper we have shown that reactive applications can be very useful in distributed programming. We have started by showing the drawbacks that the traditional ways of implementing reactivity have. We have also described the conventional publish/subscribe system organization and the specifics of JMS. Then, we have introduced the reactive programming paradigm and its most important concepts.
 
-After we have gathered enough basis knowledge for reactive programming we compared existing approaches, such as Scala.React, Scala.Rx, ELM, SID-UP, AmbientTalk/R and DREAM. The criteria that we have chosen when conducting the comparison between the different algorithms were the way the systems ensure propagation guarantees and achieving satisfying reactivity in the context of joining and leaving hosts. Our study finds Distributed Reactive Programming Middleware (DREAM) and Source Identifier Update Propagation Algorithm (SID-UP) to be the most thorough and complete papers, shaping out the future path of reactive distributed programming.
+After having gathered enough basis knowledge for reactive programming, we have compared existing approaches, such as Scala.React, Scala.Rx, ELM, SID-UP, AmbientTalk/R and DREAM. The criteria that we have chosen when conducting the comparison between the different algorithms were the way the systems ensure propagation guarantees and achieving satisfying reactivity in the context of joining and leaving hosts. Our study finds Distributed Reactive Programming Middleware (DREAM) and Source Identifier Update Propagation Algorithm (SID-UP) to be the most thorough and complete papers, shaping out the future path of reactive distributed programming.
 
 %\appendix
 %\section{Appendix Title}
@@ -649,6 +654,9 @@ This paper has been written for the Seminar Implementation of Modern Programming
 
 \bibitem{rescala}{\url{http://www.guidosalvaneschi.com/rescala/main/index.html}}
 
+\bibitem{jms}{\url{http://en.wikipedia.org/wiki/Java_Message_Service}}
+
+\bibitem{jmsd}{\url{http://docs.oracle.com/javaee/6/tutorial/doc/bncdq.html}}
 
 \end{thebibliography}
 
